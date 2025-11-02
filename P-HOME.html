@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小说智阅坊 - 智能阅读平台</title>
+    <script src="https://unpkg.byted-static.com/coze/space_ppt_lib/1.0.3-alpha.12/lib/tailwindcss.js"></script>
+    <script src="https://unpkg.byted-static.com/fortawesome/fontawesome-free/6.7.2/js/all.min.js" data-auto-replace-svg="nest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#64748b',
+                        tertiary: '#059669',
+                        success: '#10b981',
+                        danger: '#ef4444',
+                        info: '#3b82f6',
+                        'text-primary': '#1e293b',
+                        'text-secondary': '#64748b',
+                        'bg-light': '#f8fafc',
+                        'border-light': '#e2e8f0'
+                    },
+                    boxShadow: {
+                        'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+                        'card-hover': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .sidebar-collapsed {
+            width: 56px;
+        }
+        
+        .sidebar-expanded {
+            width: 240px;
+        }
+        
+        .main-content-expanded {
+            margin-left: 240px;
+        }
+        
+        .main-content-collapsed {
+            margin-left: 56px;
+        }
+        
+        .card-hover:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transform: translateY(-1px);
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .nav-item-active {
+            background-color: #dbeafe;
+            color: #2563eb;
+            border-right: 3px solid #2563eb;
+        }
+        
+        .nav-item:hover {
+            background-color: #f1f5f9;
+            color: #2563eb;
+        }
+        
+        .search-focus:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-bg-light min-h-screen">
+    <!-- 顶部导航栏 -->
+    <header id="top-navbar" class="fixed top-0 left-0 right-0 bg-white border-b border-border-light h-16 z-50">
+        <div class="flex items-center justify-between h-full px-6">
+            <!-- 左侧：Logo和菜单切换 -->
+            <div class="flex items-center space-x-4">
+                <button id="sidebar-toggle" class="p-2 rounded-lg hover:bg-gray-100 lg:hidden">
+                    <i class="fas fa-bars text-gray-600"></i>
+                </button>
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                        <i class="fas fa-book-open text-white text-sm"></i>
+                    </div>
+                    <h1 class="text-xl font-bold text-text-primary">小说智阅坊</h1>
+                </div>
+            </div>
+            
+            <!-- 中间：主导航 -->
+            <nav id="main-nav" class="hidden md:flex items-center space-x-8">
+                <a href="P-HOME.html" id="nav-main-home" class="text-primary font-medium border-b-2 border-primary py-1">首页</a>
+                <a href="P-SHELF.html" id="nav-main-shelf" class="text-text-secondary hover:text-primary py-1">书架</a>
+                <a href="P-RECOMMEND.html" id="nav-main-recommend" class="text-text-secondary hover:text-primary py-1">推荐</a>
+            </nav>
+            
+            <!-- 右侧：搜索、用户 -->
+            <div class="flex items-center space-x-4">
+                <div class="relative hidden sm:block">
+                    <input type="text" id="global-search" placeholder="搜索小说..." 
+                           class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg search-focus">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+                <button id="user-menu" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100">
+                    <img src="https://s.coze.cn/image/37V9U0QCRvw/" 
+                         alt="用户头像" class="w-8 h-8 rounded-full" data-category="人物">
+                    <span class="hidden md:block text-text-primary">读者</span>
+                    <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 左侧菜单 -->
+    <aside id="sidebar" class="fixed left-0 top-16 bottom-0 bg-white border-r border-border-light sidebar-expanded z-40 transition-all duration-300">
+        <nav class="p-4 space-y-2">
+            <a href="P-HOME.html" id="nav-home" class="nav-item nav-item-active flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium">
+                <i class="fas fa-home w-5"></i>
+                <span class="sidebar-text">首页</span>
+            </a>
+            <a href="P-SHELF.html" id="nav-shelf" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-bookmark w-5"></i>
+                <span class="sidebar-text">我的书架</span>
+            </a>
+            <a href="P-RECOMMEND.html" id="nav-recommend" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-star w-5"></i>
+                <span class="sidebar-text">为你推荐</span>
+            </a>
+            <a href="P-USER_CENTER.html" id="nav-user" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-user w-5"></i>
+                <span class="sidebar-text">用户中心</span>
+            </a>
+            <a href="P-HELP.html" id="nav-help" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-question-circle w-5"></i>
+                <span class="sidebar-text">帮助中心</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main id="main-content" class="main-content-expanded pt-16 min-h-screen transition-all duration-300">
+        <div class="p-6 max-w-7xl mx-auto">
+            <!-- 页面头部 -->
+            <div id="page-header" class="mb-8">
+                <nav id="breadcrumb" class="text-sm text-text-secondary mb-4">
+                    <span>首页</span>
+                </nav>
+                <h2 class="text-2xl font-bold text-text-primary">欢迎回来，开始你的智能阅读之旅</h2>
+                <p class="text-text-secondary mt-2">发现精彩小说，体验AI智能解析</p>
+            </div>
+
+            <!-- 快捷入口区 -->
+            <section id="quick-actions" class="mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div id="quick-action-shelf" class="bg-white rounded-xl shadow-card p-6 card-hover cursor-pointer">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-primary bg-opacity-10 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-bookmark text-primary text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-text-primary">我的书架</h3>
+                                <p class="text-sm text-text-secondary">12本小说</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="quick-action-reading" class="bg-white rounded-xl shadow-card p-6 card-hover cursor-pointer">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-tertiary bg-opacity-10 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-book-open text-tertiary text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-text-primary">继续阅读</h3>
+                                <p class="text-sm text-text-secondary">《斗破苍穹》</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="quick-action-discover" class="bg-white rounded-xl shadow-card p-6 card-hover cursor-pointer">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-info bg-opacity-10 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-compass text-info text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-text-primary">发现推荐</h3>
+                                <p class="text-sm text-text-secondary">个性化内容</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="quick-action-notes" class="bg-white rounded-xl shadow-card p-6 card-hover cursor-pointer">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-secondary bg-opacity-10 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-sticky-note text-secondary text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-text-primary">阅读笔记</h3>
+                                <p class="text-sm text-text-secondary">28条笔记</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 推荐内容区 -->
+            <section id="recommended-content" class="mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-bold text-text-primary">为你推荐</h3>
+                    <a href="P-RECOMMEND.html" id="view-more-recommendations" class="text-primary hover:text-blue-700 text-sm font-medium">查看更多</a>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-card overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table id="recommended-table" class="w-full">
+                            <thead class="bg-gray-50 border-b border-border-light">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">封面</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">标题</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">作者</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">类型</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">简介</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-border-light">
+                                <tr id="novel-row-1" class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <img src="https://s.coze.cn/image/9qo0N4RVEyo/" 
+                                             alt="斗破苍穹封面" class="w-12 h-16 rounded object-cover cursor-pointer" data-category="商业科技" data-novel-id="doupocangqiong">
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="text-sm font-medium text-text-primary cursor-pointer hover:text-primary" data-novel-id="doupocangqiong">斗破苍穹</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">天蚕土豆</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">玄幻</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-text-secondary max-w-xs truncate" title="三十年河东，三十年河西，莫欺少年穷！一个少年的传奇故事，从这里开始...">
+                                        三十年河东，三十年河西，莫欺少年穷！一个少年的传奇故事...
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button class="text-primary hover:text-blue-700 mr-3 start-reading-btn" data-novel-id="doupocangqiong">开始阅读</button>
+                                        <button class="text-text-secondary hover:text-primary add-to-shelf-btn" data-novel-id="doupocangqiong">加入书架</button>
+                                    </td>
+                                </tr>
+                                
+                                <tr id="novel-row-2" class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <img src="https://s.coze.cn/image/N5cSWQEiUig/" 
+                                             alt="完美世界封面" class="w-12 h-16 rounded object-cover cursor-pointer" data-category="商业科技" data-novel-id="wanmeishijie">
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="text-sm font-medium text-text-primary cursor-pointer hover:text-primary" data-novel-id="wanmeishijie">完美世界</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">辰东</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">奇幻</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-text-secondary max-w-xs truncate" title="一粒尘可填海，一根草斩尽日月星辰，弹指间天翻地覆。群雄并起，万族林立，诸圣争霸...">
+                                        一粒尘可填海，一根草斩尽日月星辰，弹指间天翻地覆...
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button class="text-primary hover:text-blue-700 mr-3 start-reading-btn" data-novel-id="wanmeishijie">开始阅读</button>
+                                        <button class="text-text-secondary hover:text-primary add-to-shelf-btn" data-novel-id="wanmeishijie">加入书架</button>
+                                    </td>
+                                </tr>
+                                
+                                <tr id="novel-row-3" class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <img src="https://s.coze.cn/image/TYL3ew1BIZ0/" 
+                                             alt="遮天封面" class="w-12 h-16 rounded object-cover cursor-pointer" data-category="商业科技" data-novel-id="zhetian">
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="text-sm font-medium text-text-primary cursor-pointer hover:text-primary" data-novel-id="zhetian">遮天</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">辰东</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">仙侠</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-text-secondary max-w-xs truncate" title="冰冷与黑暗并存的宇宙深处，九具庞大的龙尸拉着一口青铜古棺，亘古长存。这是太空探测器在枯寂的宇宙中捕捉到的一幅极其震撼的画面...">
+                                        冰冷与黑暗并存的宇宙深处，九具庞大的龙尸拉着一口青铜古棺...
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button class="text-primary hover:text-blue-700 mr-3 start-reading-btn" data-novel-id="zhetian">开始阅读</button>
+                                        <button class="text-text-secondary hover:text-primary add-to-shelf-btn" data-novel-id="zhetian">加入书架</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 最新活动/公告区 -->
+            <section id="announcements" class="mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-bold text-text-primary">最新动态</h3>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div id="announcement-card-1" class="bg-white rounded-xl shadow-card p-6">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-10 h-10 bg-primary bg-opacity-10 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-bullhorn text-primary"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-text-primary mb-2">AI智能解析功能全新上线</h4>
+                                <p class="text-sm text-text-secondary mb-3">现在可以体验AI自动生成的小说大纲、角色图谱和设定集，让阅读更加深入有趣。</p>
+                                <span class="text-xs text-text-secondary">2024-01-15</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="announcement-card-2" class="bg-white rounded-xl shadow-card p-6">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-10 h-10 bg-success bg-opacity-10 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-gift text-success"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-text-primary mb-2">新用户注册送VIP体验</h4>
+                                <p class="text-sm text-text-secondary mb-3">新注册用户即可获得7天VIP会员体验，享受无广告阅读和更多高级功能。</p>
+                                <span class="text-xs text-text-secondary">2024-01-12</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- 版权信息 -->
+    <footer class="bg-white border-t border-border-light py-6">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col items-center space-y-4">
+                <div class="flex items-center space-x-3">
+                    <img src="logo.png" alt="小说智阅坊" class="w-8 h-8">
+                    <span class="text-sm text-text-secondary">上海大学 25121385 于承樟</span>
+                </div>
+                <p class="text-xs text-text-secondary">© 2025 小说智阅坊 - 智能阅读平台</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 侧边栏切换功能
+            const sidebarToggle = document.querySelector('#sidebar-toggle');
+            const sidebar = document.querySelector('#sidebar');
+            const mainContent = document.querySelector('#main-content');
+            const sidebarTexts = document.querySelectorAll('.sidebar-text');
+            
+            let sidebarCollapsed = false;
+            
+            sidebarToggle.addEventListener('click', function() {
+                sidebarCollapsed = !sidebarCollapsed;
+                
+                if (sidebarCollapsed) {
+                    sidebar.classList.remove('sidebar-expanded');
+                    sidebar.classList.add('sidebar-collapsed');
+                    mainContent.classList.remove('main-content-expanded');
+                    mainContent.classList.add('main-content-collapsed');
+                    sidebarTexts.forEach(text => text.style.display = 'none');
+                } else {
+                    sidebar.classList.remove('sidebar-collapsed');
+                    sidebar.classList.add('sidebar-expanded');
+                    mainContent.classList.remove('main-content-collapsed');
+                    mainContent.classList.add('main-content-expanded');
+                    sidebarTexts.forEach(text => text.style.display = 'block');
+                }
+            });
+            
+            // 顶部主导航点击事件
+            document.querySelector('#nav-main-home').addEventListener('click', function(e) {
+                e.preventDefault();
+                // 已在首页，无需操作
+            });
+            
+            document.querySelector('#nav-main-shelf').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = 'P-SHELF.html';
+            });
+            
+            document.querySelector('#nav-main-recommend').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = 'P-RECOMMEND.html';
+            });
+            
+            // 左侧菜单导航点击事件
+            document.querySelector('#nav-home').addEventListener('click', function(e) {
+                e.preventDefault();
+                // 已在首页，无需操作
+            });
+            
+            document.querySelector('#nav-shelf').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = 'P-SHELF.html';
+            });
+            
+            document.querySelector('#nav-recommend').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = 'P-RECOMMEND.html';
+            });
+            
+            document.querySelector('#nav-user').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = 'P-USER_CENTER.html';
+            });
+            
+            document.querySelector('#nav-help').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = 'P-HELP.html';
+            });
+            
+            // 用户菜单点击事件
+            document.querySelector('#user-menu').addEventListener('click', function() {
+                window.location.href = 'P-LOGIN.html';
+            });
+            
+            // 快捷入口点击事件
+            document.querySelector('#quick-action-shelf').addEventListener('click', function() {
+                window.location.href = 'P-SHELF.html';
+            });
+            
+            document.querySelector('#quick-action-reading').addEventListener('click', function() {
+                window.location.href = 'P-READER.html?novel=doupocangqiong';
+            });
+            
+            document.querySelector('#quick-action-discover').addEventListener('click', function() {
+                window.location.href = 'P-RECOMMEND.html';
+            });
+            
+            document.querySelector('#quick-action-notes').addEventListener('click', function() {
+                window.location.href = 'P-NOTE_MANAGE.html';
+            });
+            
+            // 查看更多推荐
+            document.querySelector('#view-more-recommendations').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = 'P-RECOMMEND.html';
+            });
+            
+            // 小说封面点击事件
+            document.querySelectorAll('img[data-novel-id]').forEach(img => {
+                img.addEventListener('click', function() {
+                    const novelId = this.getAttribute('data-novel-id');
+                    window.location.href = `P-READER.html?novel=${novelId}`;
+                });
+            });
+            
+            // 小说标题点击事件
+            document.querySelectorAll('[data-novel-id]').forEach(title => {
+                if (title.tagName === 'DIV' && title.classList.contains('text-text-primary')) {
+                    title.addEventListener('click', function() {
+                        const novelId = this.getAttribute('data-novel-id');
+                        window.location.href = `P-READER.html?novel=${novelId}`;
+                    });
+                }
+            });
+            
+            // 开始阅读按钮点击事件
+            document.querySelectorAll('.start-reading-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const novelId = this.getAttribute('data-novel-id');
+                    window.location.href = `P-READER.html?novel=${novelId}`;
+                });
+            });
+            
+            // 加入书架按钮点击事件
+            document.querySelectorAll('.add-to-shelf-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const novelId = this.getAttribute('data-novel-id');
+                    // 模拟添加到书架操作
+                    this.textContent = '已加入';
+                    this.classList.remove('text-text-secondary', 'hover:text-primary');
+                    this.classList.add('text-success');
+                    
+                    // 延迟后跳转到书架页
+                    setTimeout(() => {
+                        window.location.href = `P-SHELF.html?added=${novelId}`;
+                    }, 1000);
+                });
+            });
+            
+            // 搜索功能
+            document.querySelector('#global-search').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const keyword = e.target.value.trim();
+                    if (keyword) {
+                        window.location.href = `P-SEARCH_RESULT.html?q=${encodeURIComponent(keyword)}`;
+                    }
+                }
+            });
+            
+            // 响应式处理
+            function handleResize() {
+                if (window.innerWidth < 1024) {
+                    sidebar.style.transform = sidebarCollapsed ? 'translateX(0)' : 'translateX(0)';
+                } else {
+                    sidebar.style.transform = 'translateX(0)';
+                }
+            }
+            
+            window.addEventListener('resize', handleResize);
+            handleResize(); // 初始化
+        });
+    </script>
+</body>
+</html>

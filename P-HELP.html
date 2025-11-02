@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>帮助中心 - 小说智阅坊</title>
+    <script src="https://unpkg.byted-static.com/coze/space_ppt_lib/1.0.3-alpha.12/lib/tailwindcss.js"></script>
+    <script src="https://unpkg.byted-static.com/fortawesome/fontawesome-free/6.7.2/js/all.min.js" data-auto-replace-svg="nest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#64748b',
+                        tertiary: '#059669',
+                        success: '#10b981',
+                        danger: '#ef4444',
+                        info: '#3b82f6',
+                        'text-primary': '#1e293b',
+                        'text-secondary': '#64748b',
+                        'bg-light': '#f8fafc',
+                        'border-light': '#e2e8f0'
+                    },
+                    boxShadow: {
+                        'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+                        'card-hover': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .sidebar-collapsed {
+            width: 56px;
+        }
+        
+        .sidebar-expanded {
+            width: 240px;
+        }
+        
+        .main-content-expanded {
+            margin-left: 240px;
+        }
+        
+        .main-content-collapsed {
+            margin-left: 56px;
+        }
+        
+        .nav-item-active {
+            background-color: #dbeafe;
+            color: #2563eb;
+            border-right: 3px solid #2563eb;
+        }
+        
+        .nav-item:hover {
+            background-color: #f1f5f9;
+            color: #2563eb;
+        }
+        
+        .search-focus:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .help-menu-item {
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .help-menu-item:hover {
+            background-color: #f8fafc;
+            color: #2563eb;
+        }
+        
+        .help-menu-item.active {
+            background-color: #dbeafe;
+            color: #2563eb;
+            border-right: 3px solid #2563eb;
+        }
+        
+        .help-content-section {
+            display: none;
+        }
+        
+        .help-content-section.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-bg-light min-h-screen">
+    <!-- 顶部导航栏 -->
+    <header id="top-navbar" class="fixed top-0 left-0 right-0 bg-white border-b border-border-light h-16 z-50">
+        <div class="flex items-center justify-between h-full px-6">
+            <!-- 左侧：Logo和菜单切换 -->
+            <div class="flex items-center space-x-4">
+                <button id="sidebar-toggle" class="p-2 rounded-lg hover:bg-gray-100 lg:hidden">
+                    <i class="fas fa-bars text-gray-600"></i>
+                </button>
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                        <i class="fas fa-book-open text-white text-sm"></i>
+                    </div>
+                    <h1 class="text-xl font-bold text-text-primary">小说智阅坊</h1>
+                </div>
+            </div>
+            
+            <!-- 中间：主导航 -->
+            <nav id="main-nav" class="hidden md:flex items-center space-x-8">
+                <a href="P-HOME.html" class="text-text-secondary hover:text-primary py-1">首页</a>
+                <a href="P-SHELF.html" class="text-text-secondary hover:text-primary py-1">书架</a>
+                <a href="P-RECOMMEND.html" class="text-text-secondary hover:text-primary py-1">推荐</a>
+            </nav>
+            
+            <!-- 右侧：搜索、用户 -->
+            <div class="flex items-center space-x-4">
+                <div class="relative hidden sm:block">
+                    <input type="text" id="global-search" placeholder="搜索小说..." 
+                           class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg search-focus">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+                <button id="user-menu" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100">
+                    <img src="https://s.coze.cn/image/bCb0nZmAD2Y/" 
+                         alt="用户头像" class="w-8 h-8 rounded-full" data-category="人物">
+                    <span class="hidden md:block text-text-primary">读者</span>
+                    <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 左侧菜单 -->
+    <aside id="sidebar" class="fixed left-0 top-16 bottom-0 bg-white border-r border-border-light sidebar-expanded z-40 transition-all duration-300">
+        <nav class="p-4 space-y-2">
+            <a href="P-HOME.html" id="nav-home" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-home w-5"></i>
+                <span class="sidebar-text">首页</span>
+            </a>
+            <a href="P-SHELF.html" id="nav-shelf" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-bookmark w-5"></i>
+                <span class="sidebar-text">我的书架</span>
+            </a>
+            <a href="P-RECOMMEND.html" id="nav-recommend" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-star w-5"></i>
+                <span class="sidebar-text">为你推荐</span>
+            </a>
+            <a href="P-USER_CENTER.html" id="nav-user" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-user w-5"></i>
+                <span class="sidebar-text">用户中心</span>
+            </a>
+            <a href="P-HELP.html" id="nav-help" class="nav-item nav-item-active flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium">
+                <i class="fas fa-question-circle w-5"></i>
+                <span class="sidebar-text">帮助中心</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main id="main-content" class="main-content-expanded pt-16 min-h-screen transition-all duration-300">
+        <div class="p-6 max-w-7xl mx-auto">
+            <!-- 页面头部 -->
+            <div id="page-header" class="mb-8">
+                <nav id="breadcrumb" class="text-sm text-text-secondary mb-4">
+                    <span>首页</span>
+                    <i class="fas fa-chevron-right mx-2"></i>
+                    <span class="text-primary">帮助中心</span>
+                </nav>
+                <h2 class="text-2xl font-bold text-text-primary">帮助中心</h2>
+                <p class="text-text-secondary mt-2">获取使用帮助，解决遇到的问题</p>
+            </div>
+
+            <!-- 帮助内容区 -->
+            <div class="flex flex-col lg:flex-row gap-6">
+                <!-- 左侧帮助菜单 -->
+                <div id="help-menu" class="lg:w-64 flex-shrink-0">
+                    <div class="bg-white rounded-xl shadow-card p-4">
+                        <h3 class="text-lg font-semibold text-text-primary mb-4">帮助目录</h3>
+                        <nav class="space-y-1">
+                            <button id="menu-guide" class="help-menu-item active w-full text-left px-4 py-3 rounded-lg text-sm font-medium text-text-primary">
+                                <i class="fas fa-map-signs mr-3"></i>新手指南
+                            </button>
+                            <button id="menu-features" class="help-menu-item w-full text-left px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                                <i class="fas fa-cog mr-3"></i>功能说明
+                            </button>
+                            <button id="menu-faq" class="help-menu-item w-full text-left px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                                <i class="fas fa-question-circle mr-3"></i>常见问题
+                            </button>
+                            <button id="menu-contact" class="help-menu-item w-full text-left px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                                <i class="fas fa-envelope mr-3"></i>联系我们
+                            </button>
+                        </nav>
+                    </div>
+                </div>
+
+                <!-- 右侧帮助内容 -->
+                <div id="help-content" class="flex-1">
+                    <!-- 新手指南 -->
+                    <div id="content-guide" class="help-content-section active">
+                        <div class="bg-white rounded-xl shadow-card p-6">
+                            <h3 class="text-xl font-bold text-text-primary mb-6">新手指南</h3>
+                            
+                            <div class="space-y-6">
+                                <div class="border-l-4 border-primary pl-4">
+                                    <h4 class="font-semibold text-text-primary mb-2">1. 注册与登录</h4>
+                                    <p class="text-text-secondary mb-3">在小说智阅坊，您可以通过手机号、邮箱或第三方账号快速注册登录。注册成功后即可开始您的智能阅读之旅。</p>
+                                    <div class="bg-gray-50 rounded-lg p-4">
+                                        <p class="text-sm text-text-secondary">
+                                            <i class="fas fa-info-circle text-info mr-2"></i>
+                                            新用户注册即可获得7天VIP体验，享受无广告阅读和更多高级功能。
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="border-l-4 border-tertiary pl-4">
+                                    <h4 class="font-semibold text-text-primary mb-2">2. 寻找小说</h4>
+                                    <p class="text-text-secondary mb-3">您可以通过以下方式找到感兴趣的小说：</p>
+                                    <ul class="list-disc list-inside text-text-secondary space-y-1 ml-4">
+                                        <li>浏览首页推荐内容</li>
+                                        <li>使用顶部搜索框搜索</li>
+                                        <li>查看推荐页面的个性化推荐</li>
+                                        <li>通过分类筛选查找特定类型</li>
+                                    </ul>
+                                </div>
+
+                                <div class="border-l-4 border-info pl-4">
+                                    <h4 class="font-semibold text-text-primary mb-2">3. 开始阅读</h4>
+                                    <p class="text-text-secondary mb-3">找到喜欢的小说后，点击"开始阅读"或直接点击小说标题即可进入阅读器。阅读器支持多种个性化设置：</p>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                        <div class="bg-blue-50 rounded-lg p-4">
+                                            <h5 class="font-medium text-text-primary mb-2">阅读设置</h5>
+                                            <ul class="text-sm text-text-secondary space-y-1">
+                                                <li>• 字体大小调整</li>
+                                                <li>• 背景主题切换</li>
+                                                <li>• 行间距设置</li>
+                                                <li>• 夜间模式</li>
+                                            </ul>
+                                        </div>
+                                        <div class="bg-green-50 rounded-lg p-4">
+                                            <h5 class="font-medium text-text-primary mb-2">智能功能</h5>
+                                            <ul class="text-sm text-text-secondary space-y-1">
+                                                <li>• 大纲总结</li>
+                                                <li>• 角色图谱</li>
+                                                <li>• 设定集</li>
+                                                <li>• 语义网络</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="border-l-4 border-secondary pl-4">
+                                    <h4 class="font-semibold text-text-primary mb-2">4. 管理书架</h4>
+                                    <p class="text-text-secondary mb-3">将喜欢的小说添加到书架，方便随时阅读：</p>
+                                    <div class="bg-gray-50 rounded-lg p-4">
+                                        <h5 class="font-medium text-text-primary mb-2">书架功能：</h5>
+                                        <ul class="text-sm text-text-secondary space-y-1">
+                                            <li>• 分类管理：在读、已读、想读</li>
+                                            <li>• 阅读进度记忆</li>
+                                            <li>• 批量操作</li>
+                                            <li>• 快速跳转阅读</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 功能说明 -->
+                    <div id="content-features" class="help-content-section">
+                        <div class="bg-white rounded-xl shadow-card p-6">
+                            <h3 class="text-xl font-bold text-text-primary mb-6">功能说明</h3>
+                            
+                            <div class="space-y-8">
+                                <div>
+                                    <h4 class="text-lg font-semibold text-text-primary mb-4">
+                                        <i class="fas fa-book-open text-primary mr-2"></i>智能阅读
+                                    </h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div class="bg-blue-50 rounded-lg p-4">
+                                            <h5 class="font-medium text-text-primary mb-2">个性化设置</h5>
+                                            <p class="text-sm text-text-secondary">支持多种字体、背景主题、行间距调整，满足不同阅读习惯。</p>
+                                        </div>
+                                        <div class="bg-green-50 rounded-lg p-4">
+                                            <h5 class="font-medium text-text-primary mb-2">进度同步</h5>
+                                            <p class="text-sm text-text-secondary">自动保存阅读进度，支持跨设备同步，随时随地继续阅读。</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h4 class="text-lg font-semibold text-text-primary mb-4">
+                                        <i class="fas fa-brain text-tertiary mr-2"></i>AI智能解析
+                                    </h4>
+                                    <div class="space-y-4">
+                                        <div class="border border-border-light rounded-lg p-4">
+                                            <h5 class="font-medium text-text-primary mb-2">大纲总结</h5>
+                                            <p class="text-sm text-text-secondary">AI自动生成小说核心情节脉络和章节概要，帮助快速把握故事主线。</p>
+                                        </div>
+                                        <div class="border border-border-light rounded-lg p-4">
+                                            <h5 class="font-medium text-text-primary mb-2">角色图谱</h5>
+                                            <p class="text-sm text-text-secondary">可视化展示角色关系网络，深入了解人物性格、背景和关键事件。</p>
+                                        </div>
+                                        <div class="border border-border-light rounded-lg p-4">
+                                            <h5 class="font-medium text-text-primary mb-2">设定集</h5>
+                                            <p class="text-sm text-text-secondary">智能提取小说世界观、规则、术语等设定，形成结构化内容。</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h4 class="text-lg font-semibold text-text-primary mb-4">
+                                        <i class="fas fa-handshake text-info mr-2"></i>互动体验
+                                    </h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div class="bg-purple-50 rounded-lg p-4 text-center">
+                                            <i class="fas fa-images text-purple-500 text-2xl mb-2"></i>
+                                            <h5 class="font-medium text-text-primary mb-1">四格漫画</h5>
+                                            <p class="text-sm text-text-secondary">将小说段落转换为四格漫画，增强阅读趣味性。</p>
+                                        </div>
+                                        <div class="bg-orange-50 rounded-lg p-4 text-center">
+                                            <i class="fas fa-comment-dots text-orange-500 text-2xl mb-2"></i>
+                                            <h5 class="font-medium text-text-primary mb-1">智能批注</h5>
+                                            <p class="text-sm text-text-secondary">AI生成场景描述、心理活动等补充解读。</p>
+                                        </div>
+                                        <div class="bg-red-50 rounded-lg p-4 text-center">
+                                            <i class="fas fa-sticky-note text-red-500 text-2xl mb-2"></i>
+                                            <h5 class="font-medium text-text-primary mb-1">阅读笔记</h5>
+                                            <p class="text-sm text-text-secondary">添加个人批注和想法记录，整理阅读心得。</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 常见问题 -->
+                    <div id="content-faq" class="help-content-section">
+                        <div class="bg-white rounded-xl shadow-card p-6">
+                            <h3 class="text-xl font-bold text-text-primary mb-6">常见问题</h3>
+                            
+                            <div class="space-y-6">
+                                <div class="border-b border-border-light pb-6">
+                                    <h4 class="font-semibold text-text-primary mb-2">Q: 如何同步我的阅读进度？</h4>
+                                    <p class="text-text-secondary">A: 系统会自动保存您的阅读进度。只要您使用相同的账号登录，在任何设备上都能同步您的阅读进度。</p>
+                                </div>
+
+                                <div class="border-b border-border-light pb-6">
+                                    <h4 class="font-semibold text-text-primary mb-2">Q: 可以离线阅读吗？</h4>
+                                    <p class="text-text-secondary">A: 目前暂不支持离线阅读功能。我们正在开发相关功能，敬请期待。</p>
+                                </div>
+
+                                <div class="border-b border-border-light pb-6">
+                                    <h4 class="font-semibold text-text-primary mb-2">Q: 如何使用AI智能解析功能？</h4>
+                                    <p class="text-text-secondary">A: 在阅读器页面，点击顶部工具栏的"智能解析"按钮，即可查看当前小说的大纲、角色图谱、设定集等AI生成内容。</p>
+                                </div>
+
+                                <div class="border-b border-border-light pb-6">
+                                    <h4 class="font-semibold text-text-primary mb-2">Q: 四格漫画功能如何使用？</h4>
+                                    <p class="text-text-secondary">A: 选中小说中的任意段落，点击工具栏中的"四格漫画"按钮，AI会将这段文字转换为有趣的四格漫画。</p>
+                                </div>
+
+                                <div class="border-b border-border-light pb-6">
+                                    <h4 class="font-semibold text-text-primary mb-2">Q: 如何导出我的阅读笔记？</h4>
+                                    <p class="text-text-secondary">A: 在笔记管理页面，您可以选择需要导出的笔记，然后点击"导出"按钮，支持多种格式导出。</p>
+                                </div>
+
+                                <div class="border-b border-border-light pb-6">
+                                    <h4 class="font-semibold text-text-primary mb-2">Q: 支持哪些浏览器？</h4>
+                                    <p class="text-text-secondary">A: 我们支持Chrome 90+、Firefox 88+、Safari 14+、Edge 90+等现代浏览器。建议使用最新版本以获得最佳体验。</p>
+                                </div>
+
+                                <div class="border-b border-border-light pb-6">
+                                    <h4 class="font-semibold text-text-primary mb-2">Q: 如何联系客服？</h4>
+                                    <p class="text-text-secondary">A: 您可以通过以下方式联系我们：在线客服、邮箱support@novelai.com、客服热线400-xxx-xxxx。</p>
+                                </div>
+
+                                <div class="bg-blue-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-text-primary mb-2">
+                                        <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>小贴士
+                                    </h4>
+                                    <p class="text-text-secondary">如果您遇到其他问题，欢迎随时联系我们的客服团队。我们会在24小时内回复您的咨询。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 联系我们 -->
+                    <div id="content-contact" class="help-content-section">
+                        <div class="bg-white rounded-xl shadow-card p-6">
+                            <h3 class="text-xl font-bold text-text-primary mb-6">联系我们</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div>
+                                    <h4 class="text-lg font-semibold text-text-primary mb-4">联系方式</h4>
+                                    <div class="space-y-4">
+                                        <div class="flex items-center space-x-4">
+                                            <div class="w-10 h-10 bg-primary bg-opacity-10 rounded-lg flex items-center justify-center">
+                                                <i class="fas fa-envelope text-primary"></i>
+                                            </div>
+                                            <div>
+                                                <h5 class="font-medium text-text-primary">邮箱</h5>
+                                                <p class="text-text-secondary">support@novelai.com</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="flex items-center space-x-4">
+                                            <div class="w-10 h-10 bg-tertiary bg-opacity-10 rounded-lg flex items-center justify-center">
+                                                <i class="fas fa-phone text-tertiary"></i>
+                                            </div>
+                                            <div>
+                                                <h5 class="font-medium text-text-primary">客服热线</h5>
+                                                <p class="text-text-secondary">400-123-4567</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="flex items-center space-x-4">
+                                            <div class="w-10 h-10 bg-info bg-opacity-10 rounded-lg flex items-center justify-center">
+                                                <i class="fas fa-clock text-info"></i>
+                                            </div>
+                                            <div>
+                                                <h5 class="font-medium text-text-primary">服务时间</h5>
+                                                <p class="text-text-secondary">周一至周日 9:00-21:00</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="text-lg font-semibold text-text-primary mb-4">在线反馈</h4>
+                                    <form id="feedback-form" class="space-y-4">
+                                        <div>
+                                            <label for="feedback-name" class="block text-sm font-medium text-text-primary mb-2">姓名</label>
+                                            <input type="text" id="feedback-name" name="name" class="w-full px-4 py-2 border border-gray-300 rounded-lg search-focus" placeholder="请输入您的姓名">
+                                        </div>
+                                        
+                                        <div>
+                                            <label for="feedback-email" class="block text-sm font-medium text-text-primary mb-2">邮箱</label>
+                                            <input type="email" id="feedback-email" name="email" class="w-full px-4 py-2 border border-gray-300 rounded-lg search-focus" placeholder="请输入您的邮箱">
+                                        </div>
+                                        
+                                        <div>
+                                            <label for="feedback-type" class="block text-sm font-medium text-text-primary mb-2">反馈类型</label>
+                                            <select id="feedback-type" name="type" class="w-full px-4 py-2 border border-gray-300 rounded-lg search-focus">
+                                                <option value="">请选择反馈类型</option>
+                                                <option value="bug">功能问题</option>
+                                                <option value="suggestion">功能建议</option>
+                                                <option value="complaint">投诉建议</option>
+                                                <option value="other">其他</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div>
+                                            <label for="feedback-content" class="block text-sm font-medium text-text-primary mb-2">反馈内容</label>
+                                            <textarea id="feedback-content" name="content" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg search-focus" placeholder="请详细描述您遇到的问题或建议..."></textarea>
+                                        </div>
+                                        
+                                        <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition duration-300">
+                                            提交反馈
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-8 bg-gray-50 rounded-lg p-4">
+                                <h4 class="font-semibold text-text-primary mb-2">
+                                    <i class="fas fa-info-circle text-info mr-2"></i>温馨提示
+                                </h4>
+                                <p class="text-text-secondary">我们会认真对待每一份反馈，一般会在24小时内给予回复。如需紧急处理，请拨打客服热线。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 侧边栏切换功能
+            const sidebarToggle = document.querySelector('#sidebar-toggle');
+            const sidebar = document.querySelector('#sidebar');
+            const mainContent = document.querySelector('#main-content');
+            const sidebarTexts = document.querySelectorAll('.sidebar-text');
+            
+            let sidebarCollapsed = false;
+            
+            sidebarToggle.addEventListener('click', () => {
+                sidebarCollapsed = !sidebarCollapsed;
+                
+                if (sidebarCollapsed) {
+                    sidebar.classList.remove('sidebar-expanded');
+                    sidebar.classList.add('sidebar-collapsed');
+                    mainContent.classList.remove('main-content-expanded');
+                    mainContent.classList.add('main-content-collapsed');
+                    sidebarTexts.forEach(text => text.style.display = 'none');
+                } else {
+                    sidebar.classList.remove('sidebar-collapsed');
+                    sidebar.classList.add('sidebar-expanded');
+                    mainContent.classList.remove('main-content-collapsed');
+                    mainContent.classList.add('main-content-expanded');
+                    sidebarTexts.forEach(text => text.style.display = 'block');
+                }
+            });
+
+            // 帮助菜单切换功能
+            const helpMenuItems = document.querySelectorAll('.help-menu-item');
+            const helpContentSections = document.querySelectorAll('.help-content-section');
+
+            helpMenuItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    // 移除所有active类
+                    helpMenuItems.forEach(menu => menu.classList.remove('active'));
+                    helpContentSections.forEach(section => section.classList.remove('active'));
+                    
+                    // 为当前项添加active类
+                    this.classList.add('active');
+                    
+                    // 显示对应的内容
+                    const menuId = this.id.replace('menu-', '');
+                    const contentSection = document.querySelector(`#content-${menuId}`);
+                    if (contentSection) {
+                        contentSection.classList.add('active');
+                    }
+                });
+            });
+
+            // 反馈表单提交
+            document.querySelector('#feedback-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                const feedbackData = {
+                    name: formData.get('name'),
+                    email: formData.get('email'),
+                    type: formData.get('type'),
+                    content: formData.get('content')
+                };
+                
+                // 简单验证
+                if (!feedbackData.name || !feedbackData.email || !feedbackData.type || !feedbackData.content) {
+                    alert('请填写完整的反馈信息');
+                    return;
+                }
+                
+                // 模拟提交
+                const submitButton = this.querySelector('button[type="submit"]');
+                submitButton.disabled = true;
+                submitButton.textContent = '提交中...';
+                
+                setTimeout(() => {
+                    alert('反馈提交成功！我们会在24小时内回复您。');
+                    this.reset();
+                    submitButton.disabled = false;
+                    submitButton.textContent = '提交反馈';
+                }, 1000);
+            });
+
+            // 导航链接点击事件
+            document.querySelector('#nav-home').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = 'P-HOME.html';
+            });
+
+            document.querySelector('#nav-shelf').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = 'P-SHELF.html';
+            });
+
+            document.querySelector('#nav-recommend').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = 'P-RECOMMEND.html';
+            });
+
+            document.querySelector('#nav-user').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = 'P-USER_CENTER.html';
+            });
+
+            // 搜索功能
+            document.querySelector('#global-search').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const keyword = e.target.value.trim();
+                    if (keyword) {
+                        window.location.href = `P-SEARCH_RESULT.html?q=${encodeURIComponent(keyword)}`;
+                    }
+                }
+            });
+
+            // 响应式处理
+            function handleResize() {
+                if (window.innerWidth < 1024) {
+                    sidebar.style.transform = sidebarCollapsed ? 'translateX(0)' : 'translateX(0)';
+                } else {
+                    sidebar.style.transform = 'translateX(0)';
+                }
+            }
+            
+            window.addEventListener('resize', handleResize);
+            handleResize(); // 初始化
+        });
+    </script>
+</body>
+</html>

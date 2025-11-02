@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的收藏 - 小说智阅坊</title>
+    <script src="https://unpkg.byted-static.com/coze/space_ppt_lib/1.0.3-alpha.12/lib/tailwindcss.js"></script>
+    <script src="https://unpkg.byted-static.com/fortawesome/fontawesome-free/6.7.2/js/all.min.js" data-auto-replace-svg="nest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#64748b',
+                        tertiary: '#059669',
+                        success: '#10b981',
+                        danger: '#ef4444',
+                        info: '#3b82f6',
+                        'text-primary': '#1e293b',
+                        'text-secondary': '#64748b',
+                        'bg-light': '#f8fafc',
+                        'border-light': '#e2e8f0'
+                    },
+                    boxShadow: {
+                        'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+                        'card-hover': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .sidebar-collapsed {
+            width: 56px;
+        }
+        
+        .sidebar-expanded {
+            width: 240px;
+        }
+        
+        .main-content-expanded {
+            margin-left: 240px;
+        }
+        
+        .main-content-collapsed {
+            margin-left: 56px;
+        }
+        
+        .nav-item-active {
+            background-color: #dbeafe;
+            color: #2563eb;
+            border-right: 3px solid #2563eb;
+        }
+        
+        .nav-item:hover {
+            background-color: #f1f5f9;
+            color: #2563eb;
+        }
+        
+        .search-focus:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .table-row:hover {
+            background-color: #f8fafc;
+        }
+        
+        .batch-actions {
+            background-color: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 8px 16px;
+            display: none;
+        }
+        
+        .batch-actions.show {
+            display: flex;
+        }
+        
+        .checkbox-checked {
+            background-color: #2563eb;
+            border-color: #2563eb;
+        }
+        
+        .pagination-active {
+            background-color: #2563eb;
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-bg-light min-h-screen">
+    <!-- 顶部导航栏 -->
+    <header id="top-navbar" class="fixed top-0 left-0 right-0 bg-white border-b border-border-light h-16 z-50">
+        <div class="flex items-center justify-between h-full px-6">
+            <!-- 左侧：Logo和菜单切换 -->
+            <div class="flex items-center space-x-4">
+                <button id="sidebar-toggle" class="p-2 rounded-lg hover:bg-gray-100 lg:hidden">
+                    <i class="fas fa-bars text-gray-600"></i>
+                </button>
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                        <i class="fas fa-book-open text-white text-sm"></i>
+                    </div>
+                    <h1 class="text-xl font-bold text-text-primary">小说智阅坊</h1>
+                </div>
+            </div>
+            
+            <!-- 中间：主导航 -->
+            <nav id="main-nav" class="hidden md:flex items-center space-x-8">
+                <a href="P-HOME.html" class="text-text-secondary hover:text-primary py-1">首页</a>
+                <a href="P-SHELF.html" class="text-text-secondary hover:text-primary py-1">书架</a>
+                <a href="P-RECOMMEND.html" class="text-text-secondary hover:text-primary py-1">推荐</a>
+            </nav>
+            
+            <!-- 右侧：搜索、用户 -->
+            <div class="flex items-center space-x-4">
+                <div class="relative hidden sm:block">
+                    <input type="text" id="global-search" placeholder="搜索小说..." 
+                           class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg search-focus">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+                <button id="user-menu" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100">
+                    <img src="https://s.coze.cn/image/pcaaqEy_hQM/" 
+                         alt="用户头像" class="w-8 h-8 rounded-full" data-category="人物">
+                    <span class="hidden md:block text-text-primary">读者</span>
+                    <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 左侧菜单 -->
+    <aside id="sidebar" class="fixed left-0 top-16 bottom-0 bg-white border-r border-border-light sidebar-expanded z-40 transition-all duration-300">
+        <nav class="p-4 space-y-2">
+            <a href="P-HOME.html" id="nav-home" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-home w-5"></i>
+                <span class="sidebar-text">首页</span>
+            </a>
+            <a href="P-SHELF.html" id="nav-shelf" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-bookmark w-5"></i>
+                <span class="sidebar-text">我的书架</span>
+            </a>
+            <a href="P-RECOMMEND.html" id="nav-recommend" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-star w-5"></i>
+                <span class="sidebar-text">为你推荐</span>
+            </a>
+            <a href="P-USER_CENTER.html" id="nav-user" class="nav-item nav-item-active flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium">
+                <i class="fas fa-user w-5"></i>
+                <span class="sidebar-text">用户中心</span>
+            </a>
+            <a href="P-HELP.html" id="nav-help" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-question-circle w-5"></i>
+                <span class="sidebar-text">帮助中心</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main id="main-content" class="main-content-expanded pt-16 min-h-screen transition-all duration-300">
+        <div class="p-6 max-w-7xl mx-auto">
+            <!-- 页面头部 -->
+            <div id="page-header" class="mb-8">
+                <nav id="breadcrumb" class="text-sm text-text-secondary mb-4">
+                    <span>首页</span>
+                    <i class="fas fa-chevron-right mx-2"></i>
+                    <span>用户中心</span>
+                    <i class="fas fa-chevron-right mx-2"></i>
+                    <span class="text-text-primary">我的收藏</span>
+                </nav>
+                <h2 class="text-2xl font-bold text-text-primary">我的收藏</h2>
+                <p class="text-text-secondary mt-2">管理您收藏的小说、章节、段落和智能解析内容</p>
+            </div>
+
+            <!-- 批量操作栏 -->
+            <div id="batch-actions" class="batch-actions">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <span id="selected-count" class="text-sm text-text-secondary">已选择 0 项</span>
+                        <button id="batch-delete-btn" class="px-4 py-2 bg-danger text-white rounded-lg text-sm hover:bg-red-600 disabled:opacity-50" disabled>
+                            <i class="fas fa-trash mr-2"></i>批量删除
+                        </button>
+                    </div>
+                    <button id="cancel-batch-btn" class="px-4 py-2 text-text-secondary hover:text-text-primary text-sm">
+                        取消
+                    </button>
+                </div>
+            </div>
+
+            <!-- 工具栏区域 -->
+            <div id="toolbar" class="bg-white rounded-xl shadow-card p-4 mb-6">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                    <!-- 搜索框 -->
+                    <div class="flex items-center space-x-4 flex-1">
+                        <div class="relative flex-1 max-w-md">
+                            <input type="text" id="collection-search" placeholder="搜索收藏内容或标签..." 
+                                   class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg search-focus">
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        </div>
+                        
+                        <!-- 筛选条件 -->
+                        <select id="type-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                            <option value="">全部类型</option>
+                            <option value="novel">小说</option>
+                            <option value="chapter">章节</option>
+                            <option value="paragraph">段落</option>
+                            <option value="analysis">智能解析</option>
+                        </select>
+                        
+                        <!-- 排序选项 -->
+                        <select id="sort-option" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                            <option value="collection_time_desc">按收藏时间（最新）</option>
+                            <option value="collection_time_asc">按收藏时间（最早）</option>
+                            <option value="title_asc">按标题（A-Z）</option>
+                            <option value="title_desc">按标题（Z-A）</option>
+                        </select>
+                    </div>
+                    
+                    <!-- 统计信息 -->
+                    <div class="flex items-center space-x-6 text-sm text-text-secondary">
+                        <span>总计：<span id="total-count" class="font-medium text-text-primary">24</span> 项收藏</span>
+                        <span>小说：<span class="font-medium text-text-primary">8</span> 本</span>
+                        <span>章节：<span class="font-medium text-text-primary">12</span> 章</span>
+                        <span>段落：<span class="font-medium text-text-primary">3</span> 段</span>
+                        <span>解析：<span class="font-medium text-text-primary">1</span> 项</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 内容展示区域 -->
+            <section id="content-display" class="mb-8">
+                <div class="bg-white rounded-xl shadow-card overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table id="collection-table" class="w-full">
+                            <thead class="bg-gray-50 border-b border-border-light">
+                                <tr>
+                                    <th class="px-6 py-4 text-left">
+                                        <input type="checkbox" id="select-all" class="rounded border-gray-300 text-primary focus:ring-primary">
+                                    </th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-text-secondary uppercase tracking-wider cursor-pointer hover:text-text-primary" data-sort="type">
+                                        类型 <i class="fas fa-sort ml-1"></i>
+                                    </th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-text-secondary uppercase tracking-wider cursor-pointer hover:text-text-primary" data-sort="title">
+                                        标题/内容 <i class="fas fa-sort ml-1"></i>
+                                    </th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-text-secondary uppercase tracking-wider cursor-pointer hover:text-text-primary" data-sort="novel">
+                                        所属小说 <i class="fas fa-sort ml-1"></i>
+                                    </th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-text-secondary uppercase tracking-wider cursor-pointer hover:text-text-primary" data-sort="tags">
+                                        标签 <i class="fas fa-sort ml-1"></i>
+                                    </th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-text-secondary uppercase tracking-wider cursor-pointer hover:text-text-primary" data-sort="collection_time">
+                                        收藏时间 <i class="fas fa-sort ml-1"></i>
+                                    </th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                                        操作
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="collection-tbody" class="bg-white divide-y divide-border-light">
+                                <!-- 收藏数据将通过JavaScript动态生成 -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- 空状态 -->
+                    <div id="empty-state" class="hidden p-12 text-center">
+                        <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-heart text-gray-400 text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-medium text-text-primary mb-2">暂无收藏内容</h3>
+                        <p class="text-text-secondary mb-6">去发现一些精彩的小说内容并收藏吧</p>
+                        <a href="P-RECOMMEND.html" class="inline-flex items-center px-6 py-2 bg-primary text-white rounded-lg hover:bg-blue-600">
+                            <i class="fas fa-compass mr-2"></i>去发现
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 分页区域 -->
+            <div id="pagination" class="flex items-center justify-between">
+                <div class="flex items-center space-x-4 text-sm text-text-secondary">
+                    <span>每页显示</span>
+                    <select id="page-size" class="px-3 py-1 border border-gray-300 rounded focus:outline-none focus:border-primary">
+                        <option value="10">10</option>
+                        <option value="20" selected>20</option>
+                        <option value="50">50</option>
+                    </select>
+                    <span>条，共 <span id="total-items">24</span> 条</span>
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                    <button id="prev-page" class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50" disabled>
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <div id="page-numbers" class="flex items-center space-x-1">
+                        <!-- 页码将通过JavaScript动态生成 -->
+                    </div>
+                    <button id="next-page" class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 删除确认弹窗 -->
+    <div id="delete-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-lg p-6 max-w-md w-full mx-4">
+            <div class="flex items-center space-x-4 mb-4">
+                <div class="w-12 h-12 bg-danger bg-opacity-10 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-exclamation-triangle text-danger text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-text-primary">确认删除</h3>
+                    <p class="text-sm text-text-secondary">此操作不可撤销</p>
+                </div>
+            </div>
+            <p id="delete-message" class="text-text-secondary mb-6">确定要删除选中的收藏吗？</p>
+            <div class="flex justify-end space-x-3">
+                <button id="cancel-delete" class="px-4 py-2 text-text-secondary hover:text-text-primary border border-gray-300 rounded-lg">
+                    取消
+                </button>
+                <button id="confirm-delete" class="px-4 py-2 bg-danger text-white rounded-lg hover:bg-red-600">
+                    删除
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟收藏数据
+        const mockCollections = [
+            {
+                id: 'col1',
+                type: 'novel',
+                title: '斗破苍穹',
+                novel: '斗破苍穹',
+                novelId: 'doupocangqiong',
+                tags: ['玄幻', '经典'],
+                collectionTime: '2024-01-15 14:30:25',
+                targetId: 'doupocangqiong'
+            },
+            {
+                id: 'col2',
+                type: 'chapter',
+                title: '第127章：萧炎的突破',
+                novel: '斗破苍穹',
+                novelId: 'doupocangqiong',
+                tags: ['关键章节', '高潮'],
+                collectionTime: '2024-01-14 09:15:42',
+                targetId: 'doupocangqiong_chapter_127'
+            },
+            {
+                id: 'col3',
+                type: 'paragraph',
+                title: '三十年河东，三十年河西，莫欺少年穷！',
+                novel: '斗破苍穹',
+                novelId: 'doupocangqiong',
+                tags: ['名言', '经典台词'],
+                collectionTime: '2024-01-13 20:45:12',
+                targetId: 'doupocangqiong_paragraph_1'
+            },
+            {
+                id: 'col4',
+                type: 'analysis',
+                title: '斗破苍穹 - 角色图谱分析',
+                novel: '斗破苍穹',
+                novelId: 'doupocangqiong',
+                tags: ['AI分析', '角色关系'],
+                collectionTime: '2024-01-12 16:22:33',
+                targetId: 'doupocangqiong_analysis_character'
+            },
+            {
+                id: 'col5',
+                type: 'novel',
+                title: '完美世界',
+                novel: '完美世界',
+                novelId: 'wanmeishijie',
+                tags: ['奇幻', '热血'],
+                collectionTime: '2024-01-11 11:08:55',
+                targetId: 'wanmeishijie'
+            },
+            {
+                id: 'col6',
+                type: 'chapter',
+                title: '第89章：石昊的成长',
+                novel: '完美世界',
+                novelId: 'wanmeishijie',
+                tags: ['成长', '重要'],
+                collectionTime: '2024-01-10 15:33:18',
+                targetId: 'wanmeishijie_chapter_89'
+            },
+            {
+                id: 'col7',
+                type: 'paragraph',
+                title: '一粒尘可填海，一根草斩尽日月星辰',
+                novel: '完美世界',
+                novelId: 'wanmeishijie',
+                tags: ['霸气', '经典'],
+                collectionTime: '2024-01-09 19:27:44',
+                targetId: 'wanmeishijie_paragraph_2'
+            },
+            {
+                id: 'col8',
+                type: 'novel',
+                title: '遮天',
+                novel: '遮天',
+                novelId: 'zhetian',
+                tags: ['仙侠', '经典'],
+                collectionTime: '2024-01-08 13:15:29',
+                targetId: 'zhetian'
+            }
+        ];
+
+        let currentPage = 1;
+        let pageSize = 20;
+        let filteredCollections = [...mockCollections];
+        let selectedCollections = new Set();
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initializePage();
+            renderCollections();
+            updatePagination();
+            bindEvents();
+        });
+
+        function initializePage() {
+            // 侧边栏切换功能
+            const sidebarToggle = document.querySelector('#sidebar-toggle');
+            const sidebar = document.querySelector('#sidebar');
+            const mainContent = document.querySelector('#main-content');
+            const sidebarTexts = document.querySelectorAll('.sidebar-text');
+            
+            let sidebarCollapsed = false;
+            
+            sidebarToggle.addEventListener('click', () => {
+                sidebarCollapsed = !sidebarCollapsed;
+                
+                if (sidebarCollapsed) {
+                    sidebar.classList.remove('sidebar-expanded');
+                    sidebar.classList.add('sidebar-collapsed');
+                    mainContent.classList.remove('main-content-expanded');
+                    mainContent.classList.add('main-content-collapsed');
+                    sidebarTexts.forEach(text => text.style.display = 'none');
+                } else {
+                    sidebar.classList.remove('sidebar-collapsed');
+                    sidebar.classList.add('sidebar-expanded');
+                    mainContent.classList.remove('main-content-collapsed');
+                    mainContent.classList.add('main-content-expanded');
+                    sidebarTexts.forEach(text => text.style.display = 'block');
+                }
+            });
+        }
+
+        function bindEvents() {
+            // 搜索功能
+            document.querySelector('#collection-search').addEventListener('input', handleSearch);
+            
+            // 筛选功能
+            document.querySelector('#type-filter').addEventListener('change', handleFilter);
+            
+            // 排序功能
+            document.querySelector('#sort-option').addEventListener('change', handleSort);
+            
+            // 全选功能
+            document.querySelector('#select-all').addEventListener('change', handleSelectAll);
+            
+            // 批量删除
+            document.querySelector('#batch-delete-btn').addEventListener('click', handleBatchDelete);
+            
+            // 取消批量操作
+            document.querySelector('#cancel-batch-btn').addEventListener('click', handleCancelBatch);
+            
+            // 分页大小改变
+            document.querySelector('#page-size').addEventListener('change', handlePageSizeChange);
+            
+            // 上一页下一页
+            document.querySelector('#prev-page').addEventListener('click', () => changePage(currentPage - 1));
+            document.querySelector('#next-page').addEventListener('click', () => changePage(currentPage + 1));
+            
+            // 表头排序
+            document.querySelectorAll('th[data-sort]').forEach(th => {
+                th.addEventListener('click', () => handleTableSort(th.dataset.sort));
+            });
+            
+            // 删除确认弹窗
+            document.querySelector('#cancel-delete').addEventListener('click', hideDeleteModal);
+            document.querySelector('#confirm-delete').addEventListener('click', confirmDelete);
+            
+            // 全局搜索
+            document.querySelector('#global-search').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const keyword = e.target.value.trim();
+                    if (keyword) {
+                        window.location.href = `P-SEARCH_RESULT.html?q=${encodeURIComponent(keyword)}`;
+                    }
+                }
+            });
+            
+            // 导航菜单
+            document.querySelector('#nav-home').addEventListener('click', () => {
+                window.location.href = 'P-HOME.html';
+            });
+            
+            document.querySelector('#nav-shelf').addEventListener('click', () => {
+                window.location.href = 'P-SHELF.html';
+            });
+            
+            document.querySelector('#nav-recommend').addEventListener('click', () => {
+                window.location.href = 'P-RECOMMEND.html';
+            });
+            
+            document.querySelector('#nav-user').addEventListener('click', () => {
+                window.location.href = 'P-USER_CENTER.html';
+            });
+            
+            document.querySelector('#nav-help').addEventListener('click', () => {
+                window.location.href = 'P-HELP.html';
+            });
+        }
+
+        function handleSearch(e) {
+            const keyword = e.target.value.toLowerCase().trim();
+            applyFilters();
+        }
+
+        function handleFilter(e) {
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const keyword = document.querySelector('#collection-search').value.toLowerCase().trim();
+            const typeFilter = document.querySelector('#type-filter').value;
+            
+            filteredCollections = mockCollections.filter(collection => {
+                const matchesSearch = !keyword || 
+                    collection.title.toLowerCase().includes(keyword) ||
+                    collection.tags.some(tag => tag.toLowerCase().includes(keyword));
+                    
+                const matchesType = !typeFilter || collection.type === typeFilter;
+                
+                return matchesSearch && matchesType;
+            });
+            
+            applySorting();
+            currentPage = 1;
+            renderCollections();
+            updatePagination();
+            updateBatchActions();
+        }
+
+        function handleSort(e) {
+            applySorting();
+            renderCollections();
+        }
+
+        function applySorting() {
+            const sortOption = document.querySelector('#sort-option').value;
+            
+            filteredCollections.sort((a, b) => {
+                switch (sortOption) {
+                    case 'collection_time_desc':
+                        return new Date(b.collectionTime) - new Date(a.collectionTime);
+                    case 'collection_time_asc':
+                        return new Date(a.collectionTime) - new Date(b.collectionTime);
+                    case 'title_asc':
+                        return a.title.localeCompare(b.title);
+                    case 'title_desc':
+                        return b.title.localeCompare(a.title);
+                    default:
+                        return 0;
+                }
+            });
+        }
+
+        function handleTableSort(sortField) {
+            // 简单的排序实现
+            const currentSort = document.querySelector('#sort-option').value;
+            let newSort = '';
+            
+            switch (sortField) {
+                case 'title':
+                    newSort = currentSort === 'title_asc' ? 'title_desc' : 'title_asc';
+                    break;
+                case 'collection_time':
+                    newSort = currentSort === 'collection_time_asc' ? 'collection_time_desc' : 'collection_time_asc';
+                    break;
+                default:
+                    return;
+            }
+            
+            document.querySelector('#sort-option').value = newSort;
+            applySorting();
+            renderCollections();
+        }
+
+        function handleSelectAll(e) {
+            const checkboxes = document.querySelectorAll('input[name="collection-checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = e.target.checked;
+                if (e.target.checked) {
+                    selectedCollections.add(checkbox.value);
+                } else {
+                    selectedCollections.delete(checkbox.value);
+                }
+            });
+            updateBatchActions();
+        }
+
+        function handleCollectionSelect(collectionId, checked) {
+            if (checked) {
+                selectedCollections.add(collectionId);
+            } else {
+                selectedCollections.delete(collectionId);
+            }
+            updateBatchActions();
+            updateSelectAllState();
+        }
+
+        function updateSelectAllState() {
+            const selectAllCheckbox = document.querySelector('#select-all');
+            const checkboxes = document.querySelectorAll('input[name="collection-checkbox"]');
+            const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+            
+            selectAllCheckbox.checked = checkboxes.length > 0 && checkedCount === checkboxes.length;
+            selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < checkboxes.length;
+        }
+
+        function updateBatchActions() {
+            const batchActions = document.querySelector('#batch-actions');
+            const selectedCountSpan = document.querySelector('#selected-count');
+            const batchDeleteBtn = document.querySelector('#batch-delete-btn');
+            
+            if (selectedCollections.size > 0) {
+                batchActions.classList.add('show');
+                selectedCountSpan.textContent = `已选择 ${selectedCollections.size} 项`;
+                batchDeleteBtn.disabled = false;
+            } else {
+                batchActions.classList.remove('show');
+                batchDeleteBtn.disabled = true;
+            }
+        }
+
+        function handleBatchDelete() {
+            if (selectedCollections.size > 0) {
+                document.querySelector('#delete-message').textContent = `确定要删除选中的 ${selectedCollections.size} 项收藏吗？`;
+                showDeleteModal();
+            }
+        }
+
+        function handleCancelBatch() {
+            selectedCollections.clear();
+            document.querySelectorAll('input[name="collection-checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            updateBatchActions();
+            updateSelectAllState();
+        }
+
+        function confirmDelete() {
+            // 模拟删除操作
+            selectedCollections.forEach(collectionId => {
+                const index = mockCollections.findIndex(col => col.id === collectionId);
+                if (index > -1) {
+                    mockCollections.splice(index, 1);
+                }
+            });
+            
+            selectedCollections.clear();
+            applyFilters();
+            hideDeleteModal();
+            updateBatchActions();
+            updateSelectAllState();
+            
+            // 显示删除成功提示
+            showToast('删除成功');
+        }
+
+        function showDeleteModal() {
+            document.querySelector('#delete-modal').classList.remove('hidden');
+        }
+
+        function hideDeleteModal() {
+            document.querySelector('#delete-modal').classList.add('hidden');
+        }
+
+        function handlePageSizeChange(e) {
+            pageSize = parseInt(e.target.value);
+            currentPage = 1;
+            renderCollections();
+            updatePagination();
+        }
+
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredCollections.length / pageSize);
+            if (page >= 1 && page <= totalPages) {
+                currentPage = page;
+                renderCollections();
+                updatePagination();
+            }
+        }
+
+        function renderCollections() {
+            const tbody = document.querySelector('#collection-tbody');
+            const emptyState = document.querySelector('#empty-state');
+            
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const pageCollections = filteredCollections.slice(startIndex, endIndex);
+            
+            if (pageCollections.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            
+            tbody.innerHTML = pageCollections.map(collection => `
+                <tr class="table-row">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <input type="checkbox" name="collection-checkbox" value="${collection.id}" 
+                               class="rounded border-gray-300 text-primary focus:ring-primary"
+                               ${selectedCollections.has(collection.id) ? 'checked' : ''}>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeColor(collection.type)}">
+                            ${getTypeName(collection.type)}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-medium text-primary cursor-pointer hover:text-blue-700" 
+                             onclick="handleCollectionClick('${collection.type}', '${collection.targetId}')">
+                            ${collection.title}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-text-primary cursor-pointer hover:text-primary"
+                             onclick="handleNovelClick('${collection.novelId}')">
+                            ${collection.novel}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex flex-wrap gap-1">
+                            ${collection.tags.map(tag => `
+                                <span class="inline-flex items-center px-2 py-1 rounded text-xs bg-gray-100 text-gray-800">
+                                    ${tag}
+                                </span>
+                            `).join('')}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
+                        ${formatDate(collection.collectionTime)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="handleDeleteCollection('${collection.id}')" 
+                                class="text-danger hover:text-red-700">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            // 重新绑定复选框事件
+            tbody.querySelectorAll('input[name="collection-checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', (e) => {
+                    handleCollectionSelect(e.target.value, e.target.checked);
+                });
+            });
+        }
+
+        function getTypeColor(type) {
+            const colors = {
+                novel: 'bg-blue-100 text-blue-800',
+                chapter: 'bg-green-100 text-green-800',
+                paragraph: 'bg-purple-100 text-purple-800',
+                analysis: 'bg-orange-100 text-orange-800'
+            };
+            return colors[type] || 'bg-gray-100 text-gray-800';
+        }
+
+        function getTypeName(type) {
+            const names = {
+                novel: '小说',
+                chapter: '章节',
+                paragraph: '段落',
+                analysis: '智能解析'
+            };
+            return names[type] || type;
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function updatePagination() {
+            const totalItems = filteredCollections.length;
+            const totalPages = Math.ceil(totalItems / pageSize);
+            
+            // 更新总数显示
+            document.querySelector('#total-items').textContent = totalItems;
+            document.querySelector('#total-count').textContent = totalItems;
+            
+            // 更新上一页下一页按钮状态
+            const prevBtn = document.querySelector('#prev-page');
+            const nextBtn = document.querySelector('#next-page');
+            
+            prevBtn.disabled = currentPage <= 1;
+            nextBtn.disabled = currentPage >= totalPages;
+            
+            // 生成页码按钮
+            const pageNumbers = document.querySelector('#page-numbers');
+            pageNumbers.innerHTML = '';
+            
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    const button = document.createElement('button');
+                    button.textContent = i;
+                    button.className = `px-3 py-1 border border-gray-300 rounded ${i === currentPage ? 'pagination-active' : 'hover:bg-gray-50'}`;
+                    button.addEventListener('click', () => changePage(i));
+                    pageNumbers.appendChild(button);
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    const ellipsis = document.createElement('span');
+                    ellipsis.textContent = '...';
+                    ellipsis.className = 'px-2 text-text-secondary';
+                    pageNumbers.appendChild(ellipsis);
+                }
+            }
+        }
+
+        // 全局函数，用于HTML中的事件处理
+        window.handleCollectionClick = function(type, targetId) {
+            switch (type) {
+                case 'novel':
+                    window.location.href = `P-READER.html?novel=${targetId}`;
+                    break;
+                case 'chapter':
+                    const [novelId, chapterId] = targetId.split('_chapter_');
+                    window.location.href = `P-READER.html?novel=${novelId}&chapter=${chapterId}`;
+                    break;
+                case 'paragraph':
+                    const [pNovelId, pChapterId] = targetId.split('_paragraph_');
+                    window.location.href = `P-READER.html?novel=${pNovelId}&chapter=${pChapterId}&highlight=paragraph`;
+                    break;
+                case 'analysis':
+                    const [aNovelId, analysisType] = targetId.split('_analysis_');
+                    const analysisPages = {
+                        'character': 'P-ANALYSIS_CHARACTER.html',
+                        'outline': 'P-ANALYSIS_OUTLINE.html',
+                        'setting': 'P-ANALYSIS_SETTING.html',
+                        'semantic': 'P-ANALYSIS_SEMANTIC.html'
+                    };
+                    const targetPage = analysisPages[analysisType] || 'P-ANALYSIS_CHARACTER.html';
+                    window.location.href = `${targetPage}?novel=${aNovelId}`;
+                    break;
+            }
+        };
+
+        window.handleNovelClick = function(novelId) {
+            window.location.href = `P-READER.html?novel=${novelId}`;
+        };
+
+        window.handleDeleteCollection = function(collectionId) {
+            selectedCollections.clear();
+            selectedCollections.add(collectionId);
+            document.querySelector('#delete-message').textContent = '确定要删除这个收藏吗？';
+            showDeleteModal();
+        };
+
+        function showToast(message) {
+            // 简单的提示框实现
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-20 right-4 bg-success text-white px-4 py-2 rounded-lg shadow-lg z-50';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

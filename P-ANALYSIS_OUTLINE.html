@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大纲总结 - 小说智阅坊</title>
+    <script src="https://unpkg.byted-static.com/coze/space_ppt_lib/1.0.3-alpha.12/lib/tailwindcss.js"></script>
+    <script src="https://unpkg.byted-static.com/fortawesome/fontawesome-free/6.7.2/js/all.min.js" data-auto-replace-svg="nest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#64748b',
+                        tertiary: '#059669',
+                        success: '#10b981',
+                        danger: '#ef4444',
+                        info: '#3b82f6',
+                        'text-primary': '#1e293b',
+                        'text-secondary': '#64748b',
+                        'bg-light': '#f8fafc',
+                        'border-light': '#e2e8f0'
+                    },
+                    boxShadow: {
+                        'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+                        'card-hover': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .sidebar-collapsed {
+            width: 56px;
+        }
+        
+        .sidebar-expanded {
+            width: 240px;
+        }
+        
+        .main-content-expanded {
+            margin-left: 240px;
+        }
+        
+        .main-content-collapsed {
+            margin-left: 56px;
+        }
+        
+        .nav-item-active {
+            background-color: #dbeafe;
+            color: #2563eb;
+            border-right: 3px solid #2563eb;
+        }
+        
+        .nav-item:hover {
+            background-color: #f1f5f9;
+            color: #2563eb;
+        }
+        
+        .search-focus:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .outline-item {
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .outline-item:hover {
+            background-color: #f8fafc;
+        }
+        
+        .outline-item.active {
+            background-color: #dbeafe;
+            border-left: 3px solid #2563eb;
+        }
+        
+        .outline-level-1 {
+            padding-left: 1rem;
+        }
+        
+        .outline-level-2 {
+            padding-left: 2rem;
+        }
+        
+        .outline-level-3 {
+            padding-left: 3rem;
+        }
+        
+        .outline-level-4 {
+            padding-left: 4rem;
+        }
+        
+        .expand-icon {
+            transition: transform 0.2s ease-in-out;
+        }
+        
+        .expand-icon.rotated {
+            transform: rotate(90deg);
+        }
+        
+        .outline-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+        }
+        
+        .outline-content.expanded {
+            max-height: 1000px;
+        }
+    </style>
+</head>
+<body class="bg-bg-light min-h-screen">
+    <!-- 顶部导航栏 -->
+    <header id="top-navbar" class="fixed top-0 left-0 right-0 bg-white border-b border-border-light h-16 z-50">
+        <div class="flex items-center justify-between h-full px-6">
+            <!-- 左侧：Logo和菜单切换 -->
+            <div class="flex items-center space-x-4">
+                <button id="sidebar-toggle" class="p-2 rounded-lg hover:bg-gray-100 lg:hidden">
+                    <i class="fas fa-bars text-gray-600"></i>
+                </button>
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                        <i class="fas fa-book-open text-white text-sm"></i>
+                    </div>
+                    <h1 class="text-xl font-bold text-text-primary">小说智阅坊</h1>
+                </div>
+            </div>
+            
+            <!-- 中间：小说标题和返回按钮 -->
+            <div class="flex items-center space-x-4">
+                <button id="back-to-shelf" class="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                    <i class="fas fa-arrow-left text-gray-600"></i>
+                    <span class="text-gray-700">返回书架</span>
+                </button>
+                <div class="text-center">
+                    <h2 id="novel-title" class="text-lg font-semibold text-text-primary">斗破苍穹</h2>
+                    <p class="text-sm text-text-secondary">天蚕土豆</p>
+                </div>
+            </div>
+            
+            <!-- 右侧：搜索、用户 -->
+            <div class="flex items-center space-x-4">
+                <div class="relative hidden sm:block">
+                    <input type="text" id="global-search" placeholder="搜索小说..." 
+                           class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg search-focus">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+                <button id="user-menu" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100">
+                    <img src="https://s.coze.cn/image/LyLSOOAaeaI/" 
+                         alt="用户头像" class="w-8 h-8 rounded-full" data-category="人物">
+                    <span class="hidden md:block text-text-primary">读者</span>
+                    <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 左侧菜单 -->
+    <aside id="sidebar" class="fixed left-0 top-16 bottom-0 bg-white border-r border-border-light sidebar-expanded z-40 transition-all duration-300">
+        <nav class="p-4 space-y-2">
+            <a href="P-HOME.html" id="nav-home" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-home w-5"></i>
+                <span class="sidebar-text">首页</span>
+            </a>
+            <a href="P-SHELF.html" id="nav-shelf" class="nav-item nav-item-active flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium">
+                <i class="fas fa-bookmark w-5"></i>
+                <span class="sidebar-text">我的书架</span>
+            </a>
+            <a href="P-RECOMMEND.html" id="nav-recommend" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-star w-5"></i>
+                <span class="sidebar-text">为你推荐</span>
+            </a>
+            <a href="P-USER_CENTER.html" id="nav-user" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-user w-5"></i>
+                <span class="sidebar-text">用户中心</span>
+            </a>
+            <a href="P-HELP.html" id="nav-help" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-question-circle w-5"></i>
+                <span class="sidebar-text">帮助中心</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main id="main-content" class="main-content-expanded pt-16 min-h-screen transition-all duration-300">
+        <div class="p-6 max-w-7xl mx-auto">
+            <!-- 页面头部 -->
+            <div id="page-header" class="mb-8">
+                <nav id="breadcrumb" class="text-sm text-text-secondary mb-4">
+                    <a href="P-HOME.html" class="hover:text-primary">首页</a>
+                    <span class="mx-2">></span>
+                    <a href="P-SHELF.html" class="hover:text-primary">我的书架</a>
+                    <span class="mx-2">></span>
+                    <span id="breadcrumb-novel-title">斗破苍穹</span>
+                    <span class="mx-2">></span>
+                    <span>大纲总结</span>
+                </nav>
+                <h2 class="text-2xl font-bold text-text-primary">大纲总结</h2>
+                <p class="text-text-secondary mt-2">AI智能生成的小说核心情节脉络和关键转折点</p>
+            </div>
+
+            <!-- 大纲内容区 -->
+            <section id="outline-content" class="mb-8">
+                <!-- 页面标题和操作 -->
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-text-primary">大纲总结</h2>
+                        <p class="text-text-secondary mt-2">AI智能生成的小说核心情节脉络和关键转折点</p>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                            <i class="fas fa-download mr-2"></i>导出
+                        </button>
+                        <button class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors">
+                            <i class="fas fa-share-alt mr-2"></i>分享
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 统计信息卡片 -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-text-secondary">总章节数</p>
+                                <p class="text-2xl font-bold text-text-primary">1623</p>
+                            </div>
+                            <i class="fas fa-book text-primary text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-text-secondary">关键转折点</p>
+                                <p class="text-2xl font-bold text-text-primary">28</p>
+                            </div>
+                            <i class="fas fa-exchange-alt text-green-500 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-text-secondary">主要角色</p>
+                                <p class="text-2xl font-bold text-text-primary">45</p>
+                            </div>
+                            <i class="fas fa-users text-blue-500 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-text-secondary">分析深度</p>
+                                <p class="text-2xl font-bold text-text-primary">95%</p>
+                            </div>
+                            <i class="fas fa-chart-line text-purple-500 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 小说基本信息卡片 -->
+                <div class="bg-white rounded-xl shadow-card border border-gray-100 mb-6">
+                    <div class="p-6">
+                        <div id="novel-info" class="flex items-center space-x-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
+                            <img id="novel-cover" src="https://s.coze.cn/image/-Al1l24FzcA/" 
+                                 alt="斗破苍穹封面" class="w-20 h-24 rounded-lg object-cover shadow-md" data-category="商业科技">
+                            <div class="flex-1">
+                                <h3 id="novel-info-title" class="text-xl font-bold text-text-primary">斗破苍穹</h3>
+                                <div class="grid grid-cols-2 gap-4 mt-2">
+                                    <div>
+                                        <p id="novel-info-author" class="text-sm text-text-secondary"><i class="fas fa-user-edit mr-2 text-primary"></i>作者：天蚕土豆</p>
+                                        <p id="novel-info-genre" class="text-sm text-text-secondary"><i class="fas fa-tag mr-2 text-green-500"></i>类型：玄幻修真</p>
+                                    </div>
+                                    <div>
+                                        <p id="novel-info-chapters" class="text-sm text-text-secondary"><i class="fas fa-list-ol mr-2 text-blue-500"></i>总章节：1623</p>
+                                        <p class="text-sm text-text-secondary"><i class="fas fa-star mr-2 text-yellow-500"></i>评分：9.2</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 大纲层级结构 -->
+                <div id="outline-tree" class="space-y-6">
+                    <!-- 大纲内容将在这里动态生成 -->
+                </div>
+                                    <div class="outline-item outline-level-2 cursor-pointer" data-level="2">
+                                        <div class="flex items-center justify-between p-3 rounded-lg">
+                                            <div class="flex items-center space-x-3">
+                                                <i class="fas fa-chevron-right expand-icon text-gray-400" data-target="volume-1-1"></i>
+                                                <div>
+                                                    <h5 class="font-medium text-text-primary">萧家废柴的困境</h5>
+                                                    <p class="text-sm text-text-secondary">第1-30章</p>
+                                                    <p class="text-sm text-text-secondary mt-1">萧炎从天才沦为废柴，受尽家族冷眼，与纳兰嫣然的婚约成为导火索</p>
+                                                </div>
+                                            </div>
+                                            <i class="fas fa-external-link-alt text-primary text-sm hover:cursor-pointer" 
+                                               onclick="window.location.href='P-READER.html?novel=doupocangqiong&chapter=1'"></i>
+                                        </div>
+                                        <div id="volume-1-1" class="outline-content">
+                                            <div class="outline-item outline-level-3 cursor-pointer" data-level="3">
+                                                <div class="flex items-center justify-between p-3 rounded-lg">
+                                                    <div class="flex items-center space-x-3">
+                                                        <span class="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                                                            <span class="text-white text-xs font-medium">1</span>
+                                                        </span>
+                                                        <div>
+                                                            <h6 class="font-medium text-text-primary">第1章：陨落的天才</h6>
+                                                            <p class="text-sm text-text-secondary">萧炎检测斗气，沦为三段斗之气，家族地位一落千丈</p>
+                                                        </div>
+                                                    </div>
+                                                    <i class="fas fa-external-link-alt text-primary text-sm hover:cursor-pointer" 
+                                                       onclick="window.location.href='P-READER.html?novel=doupocangqiong&chapter=1'"></i>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="outline-item outline-level-3 cursor-pointer" data-level="3">
+                                                <div class="flex items-center justify-between p-3 rounded-lg">
+                                                    <div class="flex items-center space-x-3">
+                                                        <span class="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                                                            <span class="text-white text-xs font-medium">2</span>
+                                                        </span>
+                                                        <div>
+                                                            <h6 class="font-medium text-text-primary">第2章：萧家</h6>
+                                                            <p class="text-sm text-text-secondary">介绍萧家背景，萧炎的处境，萧战的担忧</p>
+                                                        </div>
+                                                    </div>
+                                                    <i class="fas fa-external-link-alt text-primary text-sm hover:cursor-pointer" 
+                                                       onclick="window.location.href='P-READER.html?novel=doupocangqiong&chapter=2'"></i>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="outline-item outline-level-3 cursor-pointer" data-level="3">
+                                                <div class="flex items-center justify-between p-3 rounded-lg">
+                                                    <div class="flex items-center space-x-3">
+                                                        <span class="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                                                            <span class="text-white text-xs font-medium">3</span>
+                                                        </span>
+                                                        <div>
+                                                            <h6 class="font-medium text-text-primary">第3章：斗之气，三段！</h6>
+                                                            <p class="text-sm text-text-secondary">萧炎再次检测斗气，确认三段斗之气，家族众人的反应</p>
+                                                        </div>
+                                                    </div>
+                                                    <i class="fas fa-external-link-alt text-primary text-sm hover:cursor-pointer" 
+                                                       onclick="window.location.href='P-READER.html?novel=doupocangqiong&chapter=3'"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="outline-item outline-level-2 cursor-pointer" data-level="2">
+                                        <div class="flex items-center justify-between p-3 rounded-lg">
+                                            <div class="flex items-center space-x-3">
+                                                <i class="fas fa-chevron-right expand-icon text-gray-400" data-target="volume-1-2"></i>
+                                                <div>
+                                                    <h5 class="font-medium text-text-primary">神秘的药老</h5>
+                                                    <p class="text-sm text-text-secondary">第31-60章</p>
+                                                    <p class="text-sm text-text-secondary mt-1">萧炎发现戒指中的神秘灵魂体药老，获得修炼指导</p>
+                                                </div>
+                                            </div>
+                                            <i class="fas fa-external-link-alt text-primary text-sm hover:cursor-pointer" 
+                                               onclick="window.location.href='P-READER.html?novel=doupocangqiong&chapter=31'"></i>
+                                        </div>
+                                        <div id="volume-1-2" class="outline-content">
+                                            <div class="outline-item outline-level-3 cursor-pointer" data-level="3">
+                                                <div class="flex items-center justify-between p-3 rounded-lg">
+                                                    <div class="flex items-center space-x-3">
+                                                        <span class="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                                                            <span class="text-white text-xs font-medium">31</span>
+                                                        </span>
+                                                        <div>
+                                                            <h6 class="font-medium text-text-primary">第31章：神秘来客</h6>
+                                                            <p class="text-sm text-text-secondary">萧炎在戒指中听到神秘声音，发现药老的存在</p>
+                                                        </div>
+                                                    </div>
+                                                    <i class="fas fa-external-link-alt text-primary text-sm hover:cursor-pointer" 
+                                                       onclick="window.location.href='P-READER.html?novel=doupocangqiong&chapter=31'"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="outline-item outline-level-2 cursor-pointer" data-level="2">
+                                        <div class="flex items-center justify-between p-3 rounded-lg">
+                                            <div class="flex items-center space-x-3">
+                                                <i class="fas fa-chevron-right expand-icon text-gray-400" data-target="volume-1-3"></i>
+                                                <div>
+                                                    <h5 class="font-medium text-text-primary">退婚风波</h5>
+                                                    <p class="text-sm text-text-secondary">第61-90章</p>
+                                                    <p class="text-sm text-text-secondary mt-1">纳兰嫣然上门退婚，萧炎立下"三十年河东，三十年河西，莫欺少年穷"的誓言</p>
+                                                </div>
+                                            </div>
+                                            <i class="fas fa-external-link-alt text-primary text-sm hover:cursor-pointer" 
+                                               onclick="window.location.href='P-READER.html?novel=doupocangqiong&chapter=61'"></i>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="outline-item outline-level-2 cursor-pointer" data-level="2">
+                                        <div class="flex items-center justify-between p-3 rounded-lg">
+                                            <div class="flex items-center space-x-3">
+                                                <i class="fas fa-chevron-right expand-icon text-gray-400" data-target="volume-1-4"></i>
+                                                <div>
+                                                    <h5 class="font-medium text-text-primary">迦南学院</h5>
+                                                    <p class="text-sm text-text-secondary">第91-172章</p>
+                                                    <p class="text-sm text-text-secondary mt-1">萧炎进入迦南学院，开始新的修炼生涯，结识新朋友</p>
+                                                </div>
+                                            </div>
+                                            <i class="fas fa-external-link-alt text-primary text-sm hover:cursor-pointer" 
+                                               onclick="window.location.href='P-READER.html?novel=doupocangqiong&chapter=91'"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 第二卷：迦南学院 -->
+                                <div class="outline-item outline-level-1 cursor-pointer" data-level="1">
+                                    <div class="flex items-center justify-between p-3 rounded-lg">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-chevron-right expand-icon text-gray-400" data-target="volume-2"></i>
+                                            <div>
+                                                <h4 class="font-medium text-text-primary">第二卷：迦南学院</h4>
+                                                <p class="text-sm text-text-secondary">第173-429章</p>
+                                            </div>
+                                        </div>
+                                        <i class="fas fa-external-link-alt text-primary text-sm hover:cursor-pointer" 
+                                           onclick="window.location.href='P-READER.html?novel=doupocangqiong&chapter=173'"></i>
+                                    </div>
+                                    <div id="volume-2" class="outline-content">
+                                        <div class="outline-item outline-level-2 cursor-pointer" data-level="2">
+                                            <div class="flex items-center justify-between p-3 rounded-lg">
+                                                <div class="flex items-center space-x-3">
+                                                    <i class="fas fa-chevron-right expand-icon text-gray-400" data-target="volume-2-1"></i>
+                                                    <div>
+                                                        <h5 class="font-medium text-text-primary">学院生活</h5>
+                                                        <p class="text-sm text-text-secondary">第173-250章</p>
+                                                        <p class="text-sm text-text-secondary mt-1">萧炎在迦南学院的学习和修炼，与同学的竞争与合作</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 第三卷：风雷阁 -->
+                                <div class="outline-item outline-level-1 cursor-pointer" data-level="1">
+                                    <div class="flex items-center justify-between p-3 rounded-lg">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-chevron-right expand-icon text-gray-400" data-target="volume-3"></i>
+                                            <div>
+                                                <h4 class="font-medium text-text-primary">第三卷：风雷阁</h4>
+                                                <p class="text-sm text-text-secondary">第430-680章</p>
+                                            </div>
+                                        </div>
+                                        <i class="fas fa-external-link-alt text-primary text-sm hover:cursor-pointer" 
+                                           onclick="window.location.href='P-READER.html?novel=doupocangqiong&chapter=430'"></i>
+                                    </div>
+                                </div>
+
+                                <!-- 第四卷：音谷 -->
+                                <div class="outline-item outline-level-1 cursor-pointer" data-level="1">
+                                    <div class="flex items-center justify-between p-3 rounded-lg">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-chevron-right expand-icon text-gray-400" data-target="volume-4"></i>
+                                            <div>
+                                                <h4 class="font-medium text-text-primary">第四卷：音谷</h4>
+                                                <p class="text-sm text-text-secondary">第681-920章</p>
+                                            </div>
+                                        </div>
+                                        <i class="fas fa-external-link-alt text-primary text-sm hover:cursor-pointer" 
+                                           onclick="window.location.href='P-READER.html?novel=doupocangqiong&chapter=681'"></i>
+                                    </div>
+                                </div>
+
+                                <!-- 第五卷：丹塔 -->
+                                <div class="outline-item outline-level-1 cursor-pointer" data-level="1">
+                                    <div class="flex items-center justify-between p-3 rounded-lg">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-chevron-right expand-icon text-gray-400" data-target="volume-5"></i>
+                                            <div>
+                                                <h4 class="font-medium text-text-primary">第五卷：丹塔</h4>
+                                                <p class="text-sm text-text-secondary">第921-1180章</p>
+                                            </div>
+                                        </div>
+                                        <i class="fas fa-external-link-alt text-primary text-sm hover:cursor-pointer" 
+                                           onclick="window.location.href='P-READER.html?novel=doupocangqiong&chapter=921'"></i>
+                                    </div>
+                                </div>
+
+                                <!-- 第六卷：天焚炼气塔 -->
+                                <div class="outline-item outline-level-1 cursor-pointer" data-level="1">
+                                    <div class="flex items-center justify-between p-3 rounded-lg">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-chevron-right expand-icon text-gray-400" data-target="volume-6"></i>
+                                            <div>
+                                                <h4 class="font-medium text-text-primary">第六卷：天焚炼气塔</h4>
+                                                <p class="text-sm text-text-secondary">第1181-1420章</p>
+                                            </div>
+                                        </div>
+                                        <i class="fas fa-external-link-alt text-primary text-sm hover:cursor-pointer" 
+                                           onclick="window.location.href='P-READER.html?novel=doupocangqiong&chapter=1181'"></i>
+                                    </div>
+                                </div>
+
+                                <!-- 第七卷：大结局 -->
+                                <div class="outline-item outline-level-1 cursor-pointer" data-level="1">
+                                    <div class="flex items-center justify-between p-3 rounded-lg">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-chevron-right expand-icon text-gray-400" data-target="volume-7"></i>
+                                            <div>
+                                                <h4 class="font-medium text-text-primary">第七卷：大结局</h4>
+                                                <p class="text-sm text-text-secondary">第1421-1623章</p>
+                                            </div>
+                                        </div>
+                                        <i class="fas fa-external-link-alt text-primary text-sm hover:cursor-pointer" 
+                                           onclick="window.location.href='P-READER.html?novel=doupocangqiong&chapter=1421'"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- 引入API配置 -->
+    <script src="api-config.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 解析URL参数的辅助函数
+            function getUrlParams() {
+                const params = {};
+                const queryString = window.location.search.substring(1);
+                const urlParams = new URLSearchParams(queryString);
+                
+                for(const [key, value] of urlParams.entries()) {
+                    params[key] = value;
+                }
+                return params;
+            }
+
+            // 获取URL参数
+            const params = getUrlParams();
+            
+            // 根据参数更新页面内容
+            if(params.novel) {
+                loadNovelOutline(params.novel);
+            }
+
+            // 侧边栏切换功能
+            const sidebarToggle = document.querySelector('#sidebar-toggle');
+            const sidebar = document.querySelector('#sidebar');
+            const mainContent = document.querySelector('#main-content');
+            const sidebarTexts = document.querySelectorAll('.sidebar-text');
+            
+            let sidebarCollapsed = false;
+            
+            sidebarToggle.addEventListener('click', () => {
+                sidebarCollapsed = !sidebarCollapsed;
+                
+                if (sidebarCollapsed) {
+                    sidebar.classList.remove('sidebar-expanded');
+                    sidebar.classList.add('sidebar-collapsed');
+                    mainContent.classList.remove('main-content-expanded');
+                    mainContent.classList.add('main-content-collapsed');
+                    sidebarTexts.forEach(text => text.style.display = 'none');
+                } else {
+                    sidebar.classList.remove('sidebar-collapsed');
+                    sidebar.classList.add('sidebar-expanded');
+                    mainContent.classList.remove('main-content-collapsed');
+                    mainContent.classList.add('main-content-expanded');
+                    sidebarTexts.forEach(text => text.style.display = 'block');
+                }
+            });
+
+            // 返回书架按钮
+            document.querySelector('#back-to-shelf').addEventListener('click', function() {
+                window.location.href = 'P-SHELF.html';
+            });
+
+            // 大纲展开/折叠功能
+            document.querySelectorAll('.outline-item').forEach(item => {
+                const expandIcon = item.querySelector('.expand-icon');
+                const targetId = expandIcon ? expandIcon.getAttribute('data-target') : null;
+                
+                if (expandIcon && targetId) {
+                    item.addEventListener('click', function(e) {
+                        // 如果点击的是外部链接图标，不处理展开折叠
+                        if (e.target.closest('.fa-external-link-alt')) {
+                            return;
+                        }
+                        
+                        const targetContent = document.querySelector(`#${targetId}`);
+                        if (targetContent) {
+                            const isExpanded = targetContent.classList.contains('expanded');
+                            
+                            if (isExpanded) {
+                                targetContent.classList.remove('expanded');
+                                expandIcon.classList.remove('rotated');
+                            } else {
+                                targetContent.classList.add('expanded');
+                                expandIcon.classList.add('rotated');
+                            }
+                        }
+                    });
+                }
+            });
+
+            // 搜索功能
+            document.querySelector('#global-search').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const keyword = e.target.value.trim();
+                    if (keyword) {
+                        window.location.href = `P-SEARCH_RESULT.html?q=${encodeURIComponent(keyword)}`;
+                    }
+                }
+            });
+
+            // 导航菜单点击事件
+            document.querySelector('#nav-home').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = 'P-HOME.html';
+            });
+
+            document.querySelector('#nav-shelf').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = 'P-SHELF.html';
+            });
+
+            document.querySelector('#nav-recommend').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = 'P-RECOMMEND.html';
+            });
+
+            document.querySelector('#nav-user').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = 'P-USER_CENTER.html';
+            });
+
+            document.querySelector('#nav-help').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = 'P-HELP.html';
+            });
+
+            // 加载小说大纲数据
+            function loadNovelOutline(novelId) {
+                // 模拟不同小说的大纲数据
+                const novelData = {
+                    'doupocangqiong': {
+                        title: '斗破苍穹',
+                        author: '天蚕土豆',
+                        genre: '玄幻',
+                        chapters: '1623章',
+                        cover: 'https://s.coze.cn/image/UWLYjcS0h8U/',
+                        content: '斗破苍穹讲述的是天才少年萧炎在创造了家族空前绝后的修炼纪录后突然成了废人，种种打击接踵而至。就在他即将绝望的时候，一缕灵魂从他手上的戒指里浮现，一扇全新的大门在面前开启，经过艰苦修炼最终成就辉煌的故事。'
+                    },
+                    'wanmeishijie': {
+                        title: '完美世界',
+                        author: '辰东',
+                        genre: '奇幻',
+                        chapters: '1985章',
+                        cover: 'https://s.coze.cn/image/nc3oSWjI7zM/',
+                        content: '完美世界讲述的是石昊从大荒中走出，一路成长，最终成为独断万古的荒天帝的故事。他经历了无数的磨难和挑战，最终站在了世界的巅峰。'
+                    },
+                    'zhetian': {
+                        title: '遮天',
+                        author: '辰东',
+                        genre: '仙侠',
+                        chapters: '1827章',
+                        cover: 'https://s.coze.cn/image/g-dmaeEXiBQ/',
+                        content: '遮天讲述的是叶凡因缘际会来到北斗星域，从此踏上修仙之路，历经磨难，最终成为天帝的故事。他见证了无数强者的崛起与陨落，最终站在了宇宙的巅峰。'
+                    }
+                };
+
+                const novel = novelData[novelId];
+                if (novel) {
+                    document.querySelector('#novel-title').textContent = novel.title;
+                    document.querySelector('#breadcrumb-novel-title').textContent = novel.title;
+                    document.querySelector('#novel-info-title').textContent = novel.title;
+                    document.querySelector('#novel-info-author').textContent = `作者：${novel.author}`;
+                    document.querySelector('#novel-info-genre').textContent = `类型：${novel.genre}`;
+                    document.querySelector('#novel-info-chapters').textContent = `总章节：${novel.chapters}`;
+                    document.querySelector('#novel-cover').src = novel.cover;
+                    document.querySelector('#novel-cover').alt = `${novel.title}封面`;
+                    
+                    // 调用API生成大纲内容
+                    generateOutlineContent(novel.title, novel.content);
+                }
+            }
+
+            // 调用API生成大纲内容
+            async function generateOutlineContent(novelTitle, novelContent) {
+                // 在函数开头定义outlineTree，确保在catch块中可用
+                const outlineTree = document.querySelector('#outline-tree');
+                
+                try {
+                    // 显示加载状态
+                    outlineTree.innerHTML = `
+                        <div class="flex items-center justify-center p-8">
+                            <div class="text-center">
+                                <i class="fas fa-spinner fa-spin text-primary text-3xl mb-4"></i>
+                                <p class="text-text-secondary">AI正在生成《${novelTitle}》的大纲总结...</p>
+                            </div>
+                        </div>
+                    `;
+
+                    // 调用DeepSeek API生成大纲
+                    const outline = await window.apiService.generateText(`请为小说《${novelTitle}》生成详细的大纲总结。小说内容：${novelContent}
+
+请按照以下格式生成：
+1. 核心情节脉络
+2. 章节概要
+3. 关键转折点
+4. 主要冲突
+5. 结局走向
+
+请用中文回答，内容要详细且准确。`);
+                    
+                    // 解析并显示生成的大纲内容
+                    displayGeneratedOutline(outline, novelTitle);
+                } catch (error) {
+                    console.error('生成大纲失败:', error);
+                    outlineTree.innerHTML = `
+                        <div class="flex items-center justify-center p-8">
+                            <div class="text-center text-danger">
+                                <i class="fas fa-exclamation-triangle text-3xl mb-4"></i>
+                                <p class="text-text-secondary">大纲生成失败，请稍后重试</p>
+                                <button onclick="generateOutlineContent('${novelTitle}', '${novelContent}')" 
+                                        class="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600">
+                                    重新生成
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            // 显示生成的大纲内容
+            function displayGeneratedOutline(outline, novelTitle) {
+                const outlineTree = document.querySelector('#outline-tree');
+                
+                // 解析AI生成的大纲内容
+                const parsedOutline = parseOutlineContent(outline);
+                
+                // 构建大纲HTML结构
+                outlineTree.innerHTML = parsedOutline;
+            }
+
+            // 解析大纲内容为HTML结构
+            function parseOutlineContent(outline) {
+                // 清理AI生成内容中的Markdown符号
+                const cleanOutline = outline
+                    .replace(/###\s*/g, '') // 删除###符号
+                    .replace(/##\s*/g, '')  // 删除##符号
+                    .replace(/#\s*/g, '')   // 删除#符号
+                    .replace(/\*\*\*(.*?)\*\*\*/g, '<strong>$1</strong>') // 将***转换为粗体
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')     // 将**转换为粗体
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')                 // 将*转换为斜体
+                    .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 rounded">$1</code>'); // 将`转换为代码样式
+                
+                // 将文本按段落分割并转换为HTML
+                const paragraphs = cleanOutline.split('\n\n').filter(p => p.trim());
+                const outlineHtml = paragraphs.map(paragraph => {
+                    // 检查是否是标题段落
+                    if (paragraph.includes('核心情节') || paragraph.includes('章节概要') || 
+                        paragraph.includes('关键转折点') || paragraph.includes('主要冲突') || 
+                        paragraph.includes('结局走向')) {
+                        return `<h4 class="font-semibold text-primary text-lg mb-3 mt-6">${paragraph}</h4>`;
+                    }
+                    // 普通段落
+                    return `<p class="text-text-secondary leading-relaxed mb-4">${paragraph.replace(/\n/g, '<br>')}</p>`;
+                }).join('');
+                
+                return `
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="bg-gradient-to-r from-primary to-blue-600 px-6 py-4">
+                            <div class="flex items-center space-x-3">
+                                <i class="fas fa-brain text-white text-xl"></i>
+                                <div>
+                                    <h3 class="text-white font-bold text-lg">AI智能大纲总结</h3>
+                                    <p class="text-blue-100 text-sm">基于深度学习的智能分析</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="prose max-w-none">
+                                <div class="space-y-4">
+                                    ${outlineHtml}
+                                </div>
+                            </div>
+                            <div class="mt-6 pt-4 border-t border-gray-100">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-text-secondary">生成时间：${new Date().toLocaleString()}</span>
+                                    <button onclick="regenerateOutline()" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors text-sm">
+                                        <i class="fas fa-sync-alt mr-2"></i>重新生成
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 传统章节结构 -->
+                    <div class="mt-8">
+                        <div class="flex items-center space-x-3 mb-4">
+                            <i class="fas fa-book text-primary"></i>
+                            <h3 class="text-lg font-semibold text-text-primary">传统章节结构</h3>
+                        </div>
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <div class="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h4 class="font-medium text-text-primary">第一卷：陨落的天才</h4>
+                                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">第1-172章</span>
+                                </div>
+                                <p class="text-sm text-text-secondary mb-3">主角萧炎从天才跌落为废物的背景介绍，神秘戒指的出现</p>
+                                <button onclick="window.location.href='P-READER.html?novel=doupocangqiong&chapter=1'" 
+                                        class="w-full py-2 bg-gray-50 text-text-primary rounded hover:bg-gray-100 transition-colors text-sm">
+                                    开始阅读
+                                </button>
+                            </div>
+                            <div class="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h4 class="font-medium text-text-primary">第二卷：崛起之路</h4>
+                                    <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">第173-350章</span>
+                                </div>
+                                <p class="text-sm text-text-secondary mb-3">萧炎在药老指导下重新修炼，逐渐恢复实力</p>
+                                <button class="w-full py-2 bg-gray-50 text-text-secondary rounded text-sm" disabled>
+                                    即将开放
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // 重新生成大纲函数
+            function regenerateOutline() {
+                const novelTitle = document.querySelector('#novel-title').textContent;
+                const novelContent = '斗破苍穹小说内容...'; // 这里需要获取实际的小说内容
+                generateOutlineContent(novelTitle, novelContent);
+            }
+
+            // 响应式处理
+            function handleResize() {
+                if (window.innerWidth < 1024) {
+                    sidebar.style.transform = sidebarCollapsed ? 'translateX(0)' : 'translateX(0)';
+                } else {
+                    sidebar.style.transform = 'translateX(0)';
+                }
+            }
+            
+            window.addEventListener('resize', handleResize);
+            handleResize(); // 初始化
+        });
+    </script>
+
+    <!-- 引入API配置 -->
+    <script src="api-config.js"></script>
+
+    <!-- 版权信息 -->
+    <footer class="bg-white border-t border-border-light py-6">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col items-center space-y-4">
+                <div class="flex items-center space-x-3">
+                    <img src="logo.png" alt="小说智阅坊" class="w-8 h-8">
+                    <span class="text-sm text-text-secondary">上海大学 25121385 于承樟</span>
+                </div>
+                <p class="text-xs text-text-secondary">© 2025 小说智阅坊 - 智能阅读平台</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

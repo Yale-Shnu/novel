@@ -1,0 +1,37 @@
+[build]
+  publish = "."
+  command = "cd netlify/functions && npm install"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+# 全局 CORS 配置（根据需要调整）
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "https://shuycz.netlify.app"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type, Authorization, X-Requested-With"
+    # 仅在需要跨域携带 credentials 时保留以下配置
+    # Access-Control-Allow-Credentials = "true"
+
+# API 路径的预检请求优化
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "https://shuycz.netlify.app"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type, Authorization, X-Requested-With"
+    Access-Control-Max-Age = "86400"
+
+# API 路由重定向到 Netlify 函数（推荐：通过函数中转火山引擎 API 调用）
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/server/:splat"
+  status = 200
+
+# 单页应用路由支持（仅 SPA 需要）
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

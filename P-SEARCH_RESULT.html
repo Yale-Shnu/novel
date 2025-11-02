@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搜索结果 - 小说智阅坊</title>
+    <script src="https://unpkg.byted-static.com/coze/space_ppt_lib/1.0.3-alpha.12/lib/tailwindcss.js"></script>
+    <script src="https://unpkg.byted-static.com/fortawesome/fontawesome-free/6.7.2/js/all.min.js" data-auto-replace-svg="nest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#64748b',
+                        tertiary: '#059669',
+                        success: '#10b981',
+                        danger: '#ef4444',
+                        info: '#3b82f6',
+                        'text-primary': '#1e293b',
+                        'text-secondary': '#64748b',
+                        'bg-light': '#f8fafc',
+                        'border-light': '#e2e8f0'
+                    },
+                    boxShadow: {
+                        'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+                        'card-hover': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .sidebar-collapsed {
+            width: 56px;
+        }
+        
+        .sidebar-expanded {
+            width: 240px;
+        }
+        
+        .main-content-expanded {
+            margin-left: 240px;
+        }
+        
+        .main-content-collapsed {
+            margin-left: 56px;
+        }
+        
+        .card-hover:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transform: translateY(-1px);
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .nav-item-active {
+            background-color: #dbeafe;
+            color: #2563eb;
+            border-right: 3px solid #2563eb;
+        }
+        
+        .nav-item:hover {
+            background-color: #f1f5f9;
+            color: #2563eb;
+        }
+        
+        .search-focus:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .table-row-hover:hover {
+            background-color: #f8fafc;
+        }
+        
+        .filter-active {
+            background-color: #2563eb;
+            color: white;
+        }
+        
+        .sort-active {
+            color: #2563eb;
+        }
+    </style>
+</head>
+<body class="bg-bg-light min-h-screen">
+    <!-- 顶部导航栏 -->
+    <header id="top-navbar" class="fixed top-0 left-0 right-0 bg-white border-b border-border-light h-16 z-50">
+        <div class="flex items-center justify-between h-full px-6">
+            <!-- 左侧：Logo和菜单切换 -->
+            <div class="flex items-center space-x-4">
+                <button id="sidebar-toggle" class="p-2 rounded-lg hover:bg-gray-100 lg:hidden">
+                    <i class="fas fa-bars text-gray-600"></i>
+                </button>
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                        <i class="fas fa-book-open text-white text-sm"></i>
+                    </div>
+                    <h1 class="text-xl font-bold text-text-primary">小说智阅坊</h1>
+                </div>
+            </div>
+            
+            <!-- 中间：主导航 -->
+            <nav id="main-nav" class="hidden md:flex items-center space-x-8">
+                <a href="P-HOME.html" class="text-text-secondary hover:text-primary py-1">首页</a>
+                <a href="P-SHELF.html" class="text-text-secondary hover:text-primary py-1">书架</a>
+                <a href="P-RECOMMEND.html" class="text-text-secondary hover:text-primary py-1">推荐</a>
+            </nav>
+            
+            <!-- 右侧：搜索、用户 -->
+            <div class="flex items-center space-x-4">
+                <div class="relative hidden sm:block">
+                    <input type="text" id="global-search" placeholder="搜索小说..." 
+                           class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg search-focus">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+                <button id="user-menu" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100">
+                    <img src="https://s.coze.cn/image/Ul41yhP8T8E/" 
+                         alt="用户头像" class="w-8 h-8 rounded-full" data-category="人物">
+                    <span class="hidden md:block text-text-primary">读者</span>
+                    <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 左侧菜单 -->
+    <aside id="sidebar" class="fixed left-0 top-16 bottom-0 bg-white border-r border-border-light sidebar-expanded z-40 transition-all duration-300">
+        <nav class="p-4 space-y-2">
+            <a href="P-HOME.html" id="nav-home" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-home w-5"></i>
+                <span class="sidebar-text">首页</span>
+            </a>
+            <a href="P-SHELF.html" id="nav-shelf" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-bookmark w-5"></i>
+                <span class="sidebar-text">我的书架</span>
+            </a>
+            <a href="P-RECOMMEND.html" id="nav-recommend" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-star w-5"></i>
+                <span class="sidebar-text">为你推荐</span>
+            </a>
+            <a href="P-USER_CENTER.html" id="nav-user" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-user w-5"></i>
+                <span class="sidebar-text">用户中心</span>
+            </a>
+            <a href="P-HELP.html" id="nav-help" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-question-circle w-5"></i>
+                <span class="sidebar-text">帮助中心</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main id="main-content" class="main-content-expanded pt-16 min-h-screen transition-all duration-300">
+        <div class="p-6 max-w-7xl mx-auto">
+            <!-- 页面头部 -->
+            <div id="page-header" class="mb-8">
+                <nav id="breadcrumb" class="text-sm text-text-secondary mb-4">
+                    <span>首页</span>
+                    <i class="fas fa-chevron-right mx-2"></i>
+                    <span>搜索结果</span>
+                </nav>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-text-primary">搜索结果</h2>
+                        <p class="text-text-secondary mt-2">为"<span id="search-keyword" class="text-primary font-medium"></span>"找到 <span id="result-count" class="text-primary font-medium">156</span> 本小说</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 工具栏区域 -->
+            <section id="toolbar" class="bg-white rounded-xl shadow-card p-6 mb-6">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                    <!-- 搜索框 -->
+                    <div class="flex-1 max-w-md">
+                        <div class="relative">
+                            <input type="text" id="search-input" placeholder="重新搜索..." 
+                                   class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg search-focus">
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- 筛选和排序 -->
+                    <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-6">
+                        <!-- 类型筛选 -->
+                        <div class="flex items-center space-x-2">
+                            <label class="text-sm font-medium text-text-secondary">类型:</label>
+                            <div class="flex space-x-2">
+                                <button class="filter-btn filter-active px-3 py-1 text-sm rounded-full border border-gray-300" data-filter="all">全部</button>
+                                <button class="filter-btn px-3 py-1 text-sm rounded-full border border-gray-300 hover:bg-gray-50" data-filter="xuanhuan">玄幻</button>
+                                <button class="filter-btn px-3 py-1 text-sm rounded-full border border-gray-300 hover:bg-gray-50" data-filter="xianxia">仙侠</button>
+                                <button class="filter-btn px-3 py-1 text-sm rounded-full border border-gray-300 hover:bg-gray-50" data-filter="qihuan">奇幻</button>
+                                <button class="filter-btn px-3 py-1 text-sm rounded-full border border-gray-300 hover:bg-gray-50" data-filter="lishi">历史</button>
+                            </div>
+                        </div>
+                        
+                        <!-- 排序 -->
+                        <div class="flex items-center space-x-2">
+                            <label class="text-sm font-medium text-text-secondary">排序:</label>
+                            <select id="sort-select" class="px-3 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                                <option value="relevance">相关度</option>
+                                <option value="update_time">更新时间</option>
+                                <option value="word_count">字数</option>
+                                <option value="popularity">人气</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 内容展示区域 -->
+            <section id="content-area" class="mb-8">
+                <div class="bg-white rounded-xl shadow-card overflow-hidden">
+                    <!-- 批量操作栏 -->
+                    <div id="batch-actions" class="hidden bg-gray-50 px-6 py-3 border-b border-border-light">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <span class="text-sm text-text-secondary">已选择 <span id="selected-count" class="text-primary font-medium">0</span> 项</span>
+                                <button id="batch-add-shelf" class="px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-blue-700">
+                                    <i class="fas fa-bookmark mr-2"></i>批量加入书架
+                                </button>
+                                <button id="batch-cancel" class="px-4 py-2 text-text-secondary text-sm rounded-lg hover:bg-gray-200">取消选择</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 表格 -->
+                    <div class="overflow-x-auto">
+                        <table id="search-results-table" class="w-full">
+                            <thead class="bg-gray-50 border-b border-border-light">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-text-secondary uppercase tracking-wider w-10">
+                                        <input type="checkbox" id="select-all" class="rounded border-gray-300 text-primary focus:ring-primary">
+                                    </th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-text-secondary uppercase tracking-wider w-16">封面</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-text-secondary uppercase tracking-wider cursor-pointer hover:text-primary" data-sort="title">
+                                        标题 <i class="fas fa-sort ml-1"></i>
+                                    </th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-text-secondary uppercase tracking-wider cursor-pointer hover:text-primary" data-sort="author">
+                                        作者 <i class="fas fa-sort ml-1"></i>
+                                    </th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-text-secondary uppercase tracking-wider cursor-pointer hover:text-primary" data-sort="genre">
+                                        类型 <i class="fas fa-sort ml-1"></i>
+                                    </th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">简介</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-text-secondary uppercase tracking-wider cursor-pointer hover:text-primary" data-sort="word_count">
+                                        字数 <i class="fas fa-sort ml-1"></i>
+                                    </th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="search-results-tbody" class="bg-white divide-y divide-border-light">
+                                <!-- 搜索结果将通过JavaScript动态生成 -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- 无结果提示 -->
+                    <div id="no-results" class="hidden text-center py-16">
+                        <i class="fas fa-search text-6xl text-gray-300 mb-4"></i>
+                        <h3 class="text-lg font-medium text-text-primary mb-2">未找到相关小说</h3>
+                        <p class="text-text-secondary">请尝试使用其他关键词或调整筛选条件</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 分页区域 -->
+            <section id="pagination" class="flex items-center justify-between">
+                <div class="text-sm text-text-secondary">
+                    显示第 <span id="page-start">1</span> - <span id="page-end">10</span> 条，共 <span id="total-count">156</span> 条结果
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                    <button id="prev-page" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    
+                    <div id="page-numbers" class="flex space-x-1">
+                        <!-- 页码将通过JavaScript动态生成 -->
+                    </div>
+                    
+                    <button id="next-page" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    
+                    <div class="flex items-center space-x-2 ml-4">
+                        <span class="text-sm text-text-secondary">每页</span>
+                        <select id="page-size" class="px-2 py-1 text-sm border border-gray-300 rounded">
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                        </select>
+                        <span class="text-sm text-text-secondary">条</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        // 模拟搜索结果数据
+        const mockSearchResults = [
+            {
+                id: 'novel1',
+                title: '斗破苍穹',
+                author: '天蚕土豆',
+                genre: '玄幻',
+                description: '三十年河东，三十年河西，莫欺少年穷！一个少年的传奇故事，从这里开始...',
+                wordCount: '520万字',
+                cover: 'https://s.coze.cn/image/5j6NMlSuXOQ/',
+                category: '商业科技'
+            },
+            {
+                id: 'novel2',
+                title: '完美世界',
+                author: '辰东',
+                genre: '奇幻',
+                description: '一粒尘可填海，一根草斩尽日月星辰，弹指间天翻地覆。群雄并起，万族林立，诸圣争霸...',
+                wordCount: '680万字',
+                cover: 'https://s.coze.cn/image/Al5vUkLinSY/',
+                category: '商业科技'
+            },
+            {
+                id: 'novel3',
+                title: '遮天',
+                author: '辰东',
+                genre: '仙侠',
+                description: '冰冷与黑暗并存的宇宙深处，九具庞大的龙尸拉着一口青铜古棺，亘古长存...',
+                wordCount: '580万字',
+                cover: 'https://s.coze.cn/image/vuKN4QVAEB4/',
+                category: '商业科技'
+            },
+            {
+                id: 'novel4',
+                title: '凡人修仙传',
+                author: '忘语',
+                genre: '仙侠',
+                description: '一个普通少年韩立，机缘巧合之下踏上修仙之路，从此步步荆棘，逆天而行...',
+                wordCount: '780万字',
+                cover: 'https://s.coze.cn/image/_kbCCkqm2E4/',
+                category: '商业科技'
+            },
+            {
+                id: 'novel5',
+                title: '仙逆',
+                author: '耳根',
+                genre: '仙侠',
+                description: '顺为凡，逆则仙，只在心中一念间。一个少年王林，在逆境中崛起，逆天改命...',
+                wordCount: '600万字',
+                cover: 'https://s.coze.cn/image/dOaWawNrFzY/',
+                category: '商业科技'
+            },
+            {
+                id: 'novel6',
+                title: '庆余年',
+                author: '猫腻',
+                genre: '历史',
+                description: '一个年轻人的成长励志故事，现代意识与古典情怀的碰撞，权谋与人性的交织...',
+                wordCount: '360万字',
+                cover: 'https://s.coze.cn/image/4kLkP0Rn41U/',
+                category: '商业科技'
+            },
+            {
+                id: 'novel7',
+                title: '雪中悍刀行',
+                author: '烽火戏诸侯',
+                genre: '玄幻',
+                description: '一个关于江湖、朝堂、战争的宏大史诗，一个世子徐凤年的成长传奇...',
+                wordCount: '450万字',
+                cover: 'https://s.coze.cn/image/qGHA0x6HorY/',
+                category: '商业科技'
+            },
+            {
+                id: 'novel8',
+                title: '牧神记',
+                author: '宅猪',
+                genre: '玄幻',
+                description: '大墟的祖训说，天黑，别出门。大墟残老村的老弱病残们从江边捡到了一个婴儿...',
+                wordCount: '520万字',
+                cover: 'https://s.coze.cn/image/SSz1JwQ-IqY/',
+                category: '商业科技'
+            },
+            {
+                id: 'novel9',
+                title: '诡秘之主',
+                author: '爱潜水的乌贼',
+                genre: '奇幻',
+                description: '蒸汽与机械的时代，谁能触及非凡？历史和黑暗的迷雾里，又是谁在耳语？...',
+                wordCount: '450万字',
+                cover: 'https://s.coze.cn/image/R9xNeBLKnXM/',
+                category: '商业科技'
+            },
+            {
+                id: 'novel10',
+                title: '我是大仙尊',
+                author: '第一神',
+                genre: '玄幻',
+                description: '重生归来，叶辰发现自己竟然回到了五年前，那个被家族抛弃，修为尽废的时刻...',
+                wordCount: '380万字',
+                cover: 'https://s.coze.cn/image/b0ex4UvRnVg/',
+                category: '商业科技'
+            }
+        ];
+
+        // 页面状态管理
+        let currentPage = 1;
+        let pageSize = 10;
+        let totalResults = 156;
+        let currentKeyword = '';
+        let currentFilter = 'all';
+        let currentSort = 'relevance';
+        let selectedNovels = new Set();
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 解析URL参数
+            const urlParams = getUrlParams();
+            currentKeyword = urlParams.q || '';
+            
+            // 更新页面内容
+            updateSearchKeyword();
+            initializePage();
+            
+            // 绑定事件监听器
+            bindEventListeners();
+        });
+
+        // 解析URL参数
+        function getUrlParams() {
+            const params = {};
+            const queryString = window.location.search.substring(1);
+            const urlParams = new URLSearchParams(queryString);
+            
+            for(const [key, value] of urlParams.entries()) {
+                params[key] = value;
+            }
+            return params;
+        }
+
+        // 更新搜索关键词显示
+        function updateSearchKeyword() {
+            const keywordElement = document.querySelector('#search-keyword');
+            const searchInput = document.querySelector('#search-input');
+            const globalSearch = document.querySelector('#global-search');
+            
+            if (currentKeyword) {
+                keywordElement.textContent = currentKeyword;
+                searchInput.value = currentKeyword;
+                globalSearch.value = currentKeyword;
+            } else {
+                keywordElement.textContent = '全部小说';
+            }
+        }
+
+        // 初始化页面
+        function initializePage() {
+            renderSearchResults();
+            renderPagination();
+        }
+
+        // 渲染搜索结果
+        function renderSearchResults() {
+            const tbody = document.querySelector('#search-results-tbody');
+            const noResults = document.querySelector('#no-results');
+            
+            // 模拟筛选和排序
+            let filteredResults = mockSearchResults;
+            
+            if (currentFilter !== 'all') {
+                filteredResults = filteredResults.filter(novel => novel.genre === getGenreName(currentFilter));
+            }
+            
+            if (filteredResults.length === 0) {
+                tbody.innerHTML = '';
+                noResults.classList.remove('hidden');
+                return;
+            }
+            
+            noResults.classList.add('hidden');
+            
+            // 计算分页
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = Math.min(startIndex + pageSize, filteredResults.length);
+            const pageResults = filteredResults.slice(startIndex, endIndex);
+            
+            tbody.innerHTML = pageResults.map(novel => `
+                <tr class="table-row-hover" data-novel-id="${novel.id}">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <input type="checkbox" class="novel-checkbox rounded border-gray-300 text-primary focus:ring-primary" data-novel-id="${novel.id}">
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <img src="${novel.cover}" alt="${novel.title}封面" 
+                             class="w-12 h-16 rounded object-cover cursor-pointer hover:opacity-80" 
+                             data-category="${novel.category}" data-novel-id="${novel.id}">
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-medium text-text-primary cursor-pointer hover:text-primary novel-title" data-novel-id="${novel.id}">
+                            ${novel.title}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">${novel.author}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getGenreColor(novel.genre)}">
+                            ${novel.genre}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-text-secondary max-w-xs truncate" title="${novel.description}">
+                        ${novel.description.length > 100 ? novel.description.substring(0, 100) + '...' : novel.description}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">${novel.wordCount}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button class="text-primary hover:text-blue-700 mr-3 start-reading-btn" data-novel-id="${novel.id}">开始阅读</button>
+                        <button class="text-text-secondary hover:text-primary add-to-shelf-btn" data-novel-id="${novel.id}">加入书架</button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            // 更新结果计数
+            updateResultCount(filteredResults.length);
+        }
+
+        // 获取类型中文名称
+        function getGenreName(genreCode) {
+            const genreMap = {
+                'xuanhuan': '玄幻',
+                'xianxia': '仙侠',
+                'qihuan': '奇幻',
+                'lishi': '历史'
+            };
+            return genreMap[genreCode] || genreCode;
+        }
+
+        // 获取类型颜色
+        function getGenreColor(genre) {
+            const colorMap = {
+                '玄幻': 'bg-blue-100 text-blue-800',
+                '仙侠': 'bg-red-100 text-red-800',
+                '奇幻': 'bg-purple-100 text-purple-800',
+                '历史': 'bg-green-100 text-green-800'
+            };
+            return colorMap[genre] || 'bg-gray-100 text-gray-800';
+        }
+
+        // 更新结果计数
+        function updateResultCount(count) {
+            document.querySelector('#result-count').textContent = count;
+            document.querySelector('#total-count').textContent = count;
+            
+            const start = count === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+            const end = Math.min(currentPage * pageSize, count);
+            document.querySelector('#page-start').textContent = start;
+            document.querySelector('#page-end').textContent = end;
+        }
+
+        // 渲染分页
+        function renderPagination() {
+            const totalPages = Math.ceil(totalResults / pageSize);
+            const pageNumbers = document.querySelector('#page-numbers');
+            
+            let pageNumbersHTML = '';
+            
+            // 计算显示的页码范围
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, currentPage + 2);
+            
+            // 确保显示5个页码（如果可能）
+            if (endPage - startPage < 4) {
+                if (startPage === 1) {
+                    endPage = Math.min(totalPages, startPage + 4);
+                } else {
+                    startPage = Math.max(1, endPage - 4);
+                }
+            }
+            
+            // 生成页码按钮
+            for (let i = startPage; i <= endPage; i++) {
+                pageNumbersHTML += `
+                    <button class="page-number px-3 py-1 text-sm border border-gray-300 rounded-lg ${i === currentPage ? 'bg-primary text-white border-primary' : 'hover:bg-gray-50'}" 
+                            data-page="${i}">${i}</button>
+                `;
+            }
+            
+            pageNumbers.innerHTML = pageNumbersHTML;
+            
+            // 更新上一页/下一页按钮状态
+            document.querySelector('#prev-page').disabled = currentPage === 1;
+            document.querySelector('#next-page').disabled = currentPage === totalPages;
+        }
+
+        // 绑定事件监听器
+        function bindEventListeners() {
+            // 侧边栏切换
+            document.querySelector('#sidebar-toggle').addEventListener('click', toggleSidebar);
+            
+            // 搜索功能
+            document.querySelector('#search-input').addEventListener('keypress', handleSearch);
+            document.querySelector('#global-search').addEventListener('keypress', handleSearch);
+            
+            // 筛选功能
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', handleFilter);
+            });
+            
+            // 排序功能
+            document.querySelector('#sort-select').addEventListener('change', handleSort);
+            
+            // 表格排序
+            document.querySelectorAll('[data-sort]').forEach(header => {
+                header.addEventListener('click', handleTableSort);
+            });
+            
+            // 小说操作按钮
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('start-reading-btn') || e.target.closest('.start-reading-btn')) {
+                    const btn = e.target.classList.contains('start-reading-btn') ? e.target : e.target.closest('.start-reading-btn');
+                    handleStartReading(btn.dataset.novelId);
+                } else if (e.target.classList.contains('add-to-shelf-btn') || e.target.closest('.add-to-shelf-btn')) {
+                    const btn = e.target.classList.contains('add-to-shelf-btn') ? e.target : e.target.closest('.add-to-shelf-btn');
+                    handleAddToShelf(btn.dataset.novelId);
+                } else if (e.target.classList.contains('novel-title') || e.target.closest('.novel-title')) {
+                    const title = e.target.classList.contains('novel-title') ? e.target : e.target.closest('.novel-title');
+                    handleStartReading(title.dataset.novelId);
+                } else if (e.target.tagName === 'IMG' && e.target.dataset.novelId) {
+                    handleStartReading(e.target.dataset.novelId);
+                }
+            });
+            
+            // 复选框选择
+            document.querySelector('#select-all').addEventListener('change', handleSelectAll);
+            document.addEventListener('change', function(e) {
+                if (e.target.classList.contains('novel-checkbox')) {
+                    handleNovelSelect(e.target);
+                }
+            });
+            
+            // 批量操作
+            document.querySelector('#batch-add-shelf').addEventListener('click', handleBatchAddShelf);
+            document.querySelector('#batch-cancel').addEventListener('click', handleBatchCancel);
+            
+            // 分页
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('page-number')) {
+                    handlePageChange(parseInt(e.target.dataset.page));
+                }
+            });
+            
+            document.querySelector('#prev-page').addEventListener('click', () => {
+                if (currentPage > 1) {
+                    handlePageChange(currentPage - 1);
+                }
+            });
+            
+            document.querySelector('#next-page').addEventListener('click', () => {
+                const totalPages = Math.ceil(totalResults / pageSize);
+                if (currentPage < totalPages) {
+                    handlePageChange(currentPage + 1);
+                }
+            });
+            
+            // 每页条数
+            document.querySelector('#page-size').addEventListener('change', handlePageSizeChange);
+            
+            // 导航菜单
+            document.querySelector('#nav-home').addEventListener('click', () => {
+                window.location.href = 'P-HOME.html';
+            });
+            
+            document.querySelector('#nav-shelf').addEventListener('click', () => {
+                window.location.href = 'P-SHELF.html';
+            });
+            
+            document.querySelector('#nav-recommend').addEventListener('click', () => {
+                window.location.href = 'P-RECOMMEND.html';
+            });
+            
+            document.querySelector('#nav-user').addEventListener('click', () => {
+                window.location.href = 'P-USER_CENTER.html';
+            });
+            
+            document.querySelector('#nav-help').addEventListener('click', () => {
+                window.location.href = 'P-HELP.html';
+            });
+        }
+
+        // 侧边栏切换
+        function toggleSidebar() {
+            const sidebar = document.querySelector('#sidebar');
+            const mainContent = document.querySelector('#main-content');
+            const sidebarTexts = document.querySelectorAll('.sidebar-text');
+            
+            if (sidebar.classList.contains('sidebar-expanded')) {
+                sidebar.classList.remove('sidebar-expanded');
+                sidebar.classList.add('sidebar-collapsed');
+                mainContent.classList.remove('main-content-expanded');
+                mainContent.classList.add('main-content-collapsed');
+                sidebarTexts.forEach(text => text.style.display = 'none');
+            } else {
+                sidebar.classList.remove('sidebar-collapsed');
+                sidebar.classList.add('sidebar-expanded');
+                mainContent.classList.remove('main-content-collapsed');
+                mainContent.classList.add('main-content-expanded');
+                sidebarTexts.forEach(text => text.style.display = 'block');
+            }
+        }
+
+        // 搜索处理
+        function handleSearch(e) {
+            if (e.key === 'Enter') {
+                const keyword = e.target.value.trim();
+                if (keyword) {
+                    currentKeyword = keyword;
+                    currentPage = 1;
+                    updateSearchKeyword();
+                    renderSearchResults();
+                    renderPagination();
+                }
+            }
+        }
+
+        // 筛选处理
+        function handleFilter(e) {
+            const filter = e.target.dataset.filter;
+            
+            // 更新筛选按钮状态
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('filter-active');
+            });
+            e.target.classList.add('filter-active');
+            
+            currentFilter = filter;
+            currentPage = 1;
+            renderSearchResults();
+            renderPagination();
+        }
+
+        // 排序处理
+        function handleSort(e) {
+            currentSort = e.target.value;
+            renderSearchResults();
+        }
+
+        // 表格排序处理
+        function handleTableSort(e) {
+            const sortField = e.currentTarget.dataset.sort;
+            // 这里可以实现表格排序逻辑
+            console.log('排序字段:', sortField);
+        }
+
+        // 开始阅读
+        function handleStartReading(novelId) {
+            window.location.href = `P-READER.html?novel=${novelId}`;
+        }
+
+        // 加入书架
+        function handleAddToShelf(novelId) {
+            // 模拟加入书架操作
+            console.log('加入书架:', novelId);
+            // 这里可以显示成功提示
+            alert('已加入书架！');
+        }
+
+        // 全选处理
+        function handleSelectAll(e) {
+            const checkboxes = document.querySelectorAll('.novel-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = e.target.checked;
+                if (e.target.checked) {
+                    selectedNovels.add(checkbox.dataset.novelId);
+                } else {
+                    selectedNovels.delete(checkbox.dataset.novelId);
+                }
+            });
+            updateBatchActions();
+        }
+
+        // 小说选择处理
+        function handleNovelSelect(checkbox) {
+            if (checkbox.checked) {
+                selectedNovels.add(checkbox.dataset.novelId);
+            } else {
+                selectedNovels.delete(checkbox.dataset.novelId);
+            }
+            
+            // 更新全选状态
+            const totalCheckboxes = document.querySelectorAll('.novel-checkbox').length;
+            const selectAllCheckbox = document.querySelector('#select-all');
+            
+            if (selectedNovels.size === 0) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+            } else if (selectedNovels.size === totalCheckboxes) {
+                selectAllCheckbox.checked = true;
+                selectAllCheckbox.indeterminate = false;
+            } else {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = true;
+            }
+            
+            updateBatchActions();
+        }
+
+        // 更新批量操作栏
+        function updateBatchActions() {
+            const batchActions = document.querySelector('#batch-actions');
+            const selectedCount = document.querySelector('#selected-count');
+            
+            if (selectedNovels.size > 0) {
+                batchActions.classList.remove('hidden');
+                selectedCount.textContent = selectedNovels.size;
+            } else {
+                batchActions.classList.add('hidden');
+            }
+        }
+
+        // 批量加入书架
+        function handleBatchAddShelf() {
+            if (selectedNovels.size > 0) {
+                console.log('批量加入书架:', Array.from(selectedNovels));
+                alert(`已批量加入 ${selectedNovels.size} 本小说到书架！`);
+                selectedNovels.clear();
+                updateBatchActions();
+                
+                // 取消所有选择
+                document.querySelectorAll('.novel-checkbox').forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                document.querySelector('#select-all').checked = false;
+                document.querySelector('#select-all').indeterminate = false;
+            }
+        }
+
+        // 取消批量选择
+        function handleBatchCancel() {
+            selectedNovels.clear();
+            updateBatchActions();
+            
+            // 取消所有选择
+            document.querySelectorAll('.novel-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            document.querySelector('#select-all').checked = false;
+            document.querySelector('#select-all').indeterminate = false;
+        }
+
+        // 页面切换
+        function handlePageChange(page) {
+            currentPage = page;
+            renderSearchResults();
+            renderPagination();
+        }
+
+        // 每页条数变更
+        function handlePageSizeChange(e) {
+            pageSize = parseInt(e.target.value);
+            currentPage = 1;
+            renderSearchResults();
+            renderPagination();
+        }
+
+        // 响应式处理
+        function handleResize() {
+            if (window.innerWidth < 1024) {
+                const sidebar = document.querySelector('#sidebar');
+                sidebar.style.transform = 'translateX(0)';
+            }
+        }
+
+        window.addEventListener('resize', handleResize);
+        handleResize();
+    </script>
+</body>
+</html>

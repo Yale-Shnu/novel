@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能批注 - 小说智阅坊</title>
+    <script src="https://unpkg.byted-static.com/coze/space_ppt_lib/1.0.3-alpha.12/lib/tailwindcss.js"></script>
+    <script src="https://unpkg.byted-static.com/fortawesome/fontawesome-free/6.7.2/js/all.min.js" data-auto-replace-svg="nest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#64748b',
+                        tertiary: '#059669',
+                        success: '#10b981',
+                        danger: '#ef4444',
+                        info: '#3b82f6',
+                        'text-primary': '#1e293b',
+                        'text-secondary': '#64748b',
+                        'bg-light': '#f8fafc',
+                        'border-light': '#e2e8f0'
+                    },
+                    boxShadow: {
+                        'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+                        'modal': '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+        
+        .annotation-highlight {
+            background-color: #fef3c7;
+            padding: 2px 4px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        
+        .annotation-active {
+            background-color: #fbbf24;
+            box-shadow: 0 0 0 2px #f59e0b;
+        }
+        
+        .modal-enter {
+            animation: modalEnter 0.3s ease-out;
+        }
+        
+        @keyframes modalEnter {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 min-h-screen">
+    <!-- 模态弹窗背景 -->
+    <div id="modal-backdrop" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4">
+        <!-- 模态弹窗内容 -->
+        <div id="annotation-modal" class="bg-white rounded-xl shadow-modal w-full max-w-4xl max-h-[90vh] overflow-hidden modal-enter">
+            <!-- 弹窗头部 -->
+            <div id="modal-header" class="flex items-center justify-between p-6 border-b border-border-light bg-gray-50">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-primary bg-opacity-10 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-highlighter text-primary text-sm"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-text-primary">智能批注</h2>
+                </div>
+                <button id="close-modal" class="p-2 rounded-lg hover:bg-gray-200 transition-colors">
+                    <i class="fas fa-times text-gray-500 hover:text-gray-700"></i>
+                </button>
+            </div>
+            
+            <!-- 弹窗内容区 -->
+            <div id="modal-content" class="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+                <!-- 原文展示区 -->
+                <div id="original-text-section" class="mb-6">
+                    <h3 class="text-lg font-semibold text-text-primary mb-3 flex items-center">
+                        <i class="fas fa-quote-left text-primary mr-2"></i>
+                        原文内容
+                    </h3>
+                    <div class="bg-gray-50 rounded-lg p-4 border-l-4 border-primary">
+                        <p id="original-text" class="text-text-secondary leading-relaxed">
+                            加载中...
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- 智能批注区 -->
+                <div id="annotation-section" class="mb-6">
+                    <h3 class="text-lg font-semibold text-text-primary mb-3 flex items-center">
+                        <i class="fas fa-comment-dots text-primary mr-2"></i>
+                        AI智能批注
+                    </h3>
+                    <div id="annotation-content" class="space-y-4">
+                        <div class="bg-white rounded-lg p-4 border border-border-light">
+                            <div class="flex items-center space-x-3 mb-3">
+                                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-robot text-blue-600"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium text-text-primary">AI分析中...</h4>
+                                    <p class="text-sm text-text-secondary">正在生成智能批注</p>
+                                </div>
+                            </div>
+                            <div class="loading-spinner border-2 border-blue-200 border-t-blue-600 rounded-full w-6 h-6 animate-spin mx-auto"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 批注类型说明 -->
+                <div id="annotation-legend" class="mb-6">
+                    <h3 class="text-lg font-semibold text-text-primary mb-3">批注类型说明</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="flex items-center space-x-3 p-3 bg-yellow-50 rounded-lg">
+                            <div class="w-4 h-4 bg-yellow-500 rounded"></div>
+                            <span class="text-sm text-text-secondary">场景分析 - 分析环境氛围和背景</span>
+                        </div>
+                        <div class="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
+                            <div class="w-4 h-4 bg-purple-500 rounded"></div>
+                            <span class="text-sm text-text-secondary">人物心理 - 解读角色内心活动</span>
+                        </div>
+                        <div class="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
+                            <div class="w-4 h-4 bg-green-500 rounded"></div>
+                            <span class="text-sm text-text-secondary">情节意义 - 分析事件发展意义</span>
+                        </div>
+                        <div class="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
+                            <div class="w-4 h-4 bg-blue-500 rounded"></div>
+                            <span class="text-sm text-text-secondary">写作手法 - 分析文学技巧运用</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 操作按钮区 -->
+                <div id="action-buttons" class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <button id="regenerate-annotation" class="btn-primary flex items-center space-x-2">
+                            <i class="fas fa-sync-alt"></i>
+                            <span>重新生成</span>
+                        </button>
+                        <button id="copy-annotation" class="btn-secondary flex items-center space-x-2">
+                            <i class="fas fa-copy"></i>
+                            <span>复制批注</span>
+                        </button>
+                    </div>
+                    <div class="text-sm text-text-secondary">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        由DeepSeek AI自动生成
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入API配置 -->
+    <script src="api-config.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 从sessionStorage获取数据的辅助函数
+            function getAnnotationData() {
+                const params = {};
+                params.text = sessionStorage.getItem('annotationText') || '';
+                params.annotation = sessionStorage.getItem('annotationResult') || '';
+                params.novel = sessionStorage.getItem('annotationNovelId') || 'doupocangqiong';
+                
+                // 清理sessionStorage
+                sessionStorage.removeItem('annotationText');
+                sessionStorage.removeItem('annotationResult');
+                sessionStorage.removeItem('annotationNovelId');
+                
+                return params;
+            }
+            
+            // 获取数据
+            const params = getAnnotationData();
+            
+            // 初始化页面
+            initializeAnnotationViewer(params);
+            
+            // 关闭模态弹窗功能
+            function closeModal() {
+                if (window.history.length > 1) {
+                    window.history.back();
+                } else {
+                    window.location.href = 'P-READER.html';
+                }
+            }
+            
+            // 关闭按钮点击事件
+            document.querySelector('#close-modal').addEventListener('click', closeModal);
+            
+            // 点击背景关闭弹窗
+            document.querySelector('#modal-backdrop').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal();
+                }
+            });
+            
+            // ESC键关闭弹窗
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeModal();
+                }
+            });
+            
+            // 重新生成批注
+            document.querySelector('#regenerate-annotation').addEventListener('click', function() {
+                const text = document.querySelector('#original-text').textContent;
+                if (text && text !== '加载中...') {
+                    generateAnnotation(text);
+                }
+            });
+            
+            // 复制批注功能
+            document.querySelector('#copy-annotation').addEventListener('click', function() {
+                const annotationContent = document.querySelector('#annotation-content').textContent;
+                navigator.clipboard.writeText(annotationContent).then(() => {
+                    const originalText = this.innerHTML;
+                    this.innerHTML = '<i class="fas fa-check"></i><span>已复制</span>';
+                    this.classList.add('bg-success', 'text-white', 'border-success');
+                    
+                    setTimeout(() => {
+                        this.innerHTML = originalText;
+                        this.classList.remove('bg-success', 'text-white', 'border-success');
+                    }, 2000);
+                });
+            });
+        });
+
+        // 初始化批注查看器
+        async function initializeAnnotationViewer(params) {
+            // 显示原文内容
+            if (params.text) {
+                document.querySelector('#original-text').textContent = params.text;
+            }
+            
+            // 如果有预生成的批注，直接显示
+            if (params.annotation) {
+                displayAnnotation(params.annotation);
+            } else if (params.text) {
+                // 否则调用API生成批注
+                await generateAnnotation(params.text);
+            }
+        }
+
+        // 生成智能批注
+        async function generateAnnotation(text) {
+            const annotationContent = document.querySelector('#annotation-content');
+            
+            // 显示加载状态
+            annotationContent.innerHTML = `
+                <div class="bg-white rounded-lg p-4 border border-border-light">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-robot text-blue-600"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-text-primary">AI分析中...</h4>
+                            <p class="text-sm text-text-secondary">正在生成智能批注</p>
+                        </div>
+                    </div>
+                    <div class="loading-spinner border-2 border-blue-200 border-t-blue-600 rounded-full w-6 h-6 animate-spin mx-auto"></div>
+                </div>
+            `;
+
+            try {
+                // 检查API服务是否可用
+                if (!window.apiService || !window.apiService.generateText) {
+                    throw new Error('API服务不可用，请确保服务器已启动');
+                }
+                
+                // 调用DeepSeek API生成智能批注
+                const annotation = await window.apiService.generateText(`请为以下小说片段提供智能批注和分析：
+${text}
+
+请从以下角度进行分析：
+1. 文学手法分析
+2. 情节发展意义
+3. 人物心理描写
+4. 主题思想体现
+5. 写作技巧评价
+
+请用中文回答，分析要专业且有深度。`);
+                
+                // 显示生成的批注
+                displayAnnotation(annotation);
+            } catch (error) {
+                console.error('生成批注失败:', error);
+                annotationContent.innerHTML = `
+                    <div class="bg-white rounded-lg p-4 border border-border-light">
+                        <div class="text-center text-danger">
+                            <i class="fas fa-exclamation-triangle text-3xl mb-4"></i>
+                            <p class="text-text-secondary">批注生成失败：${error.message}</p>
+                            <button onclick="generateAnnotation('${text.replace(/'/g, "\\'")}')" 
+                                    class="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600">
+                                重新生成
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // 显示批注内容
+        function displayAnnotation(annotation) {
+            const annotationContent = document.querySelector('#annotation-content');
+            
+            // 解析批注内容
+            const parsedAnnotation = parseAnnotation(annotation);
+            
+            annotationContent.innerHTML = parsedAnnotation;
+        }
+
+        // 解析批注内容
+        function parseAnnotation(annotation) {
+            // 简单的解析逻辑，将AI返回的批注转换为HTML
+            const lines = annotation.split('\n').filter(line => line.trim());
+            let html = '';
+            
+            for (const line of lines) {
+                if (line.includes('场景分析') || line.includes('1.')) {
+                    html += `
+                        <div class="bg-yellow-50 rounded-lg p-4 border-l-4 border-yellow-500">
+                            <div class="flex items-center space-x-3 mb-2">
+                                <div class="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-map-marker-alt text-yellow-600 text-xs"></i>
+                                </div>
+                                <h4 class="font-medium text-text-primary">场景分析</h4>
+                            </div>
+                            <p class="text-text-secondary">${line.replace(/^.*?：/, '').trim()}</p>
+                        </div>
+                    `;
+                } else if (line.includes('人物心理') || line.includes('2.')) {
+                    html += `
+                        <div class="bg-purple-50 rounded-lg p-4 border-l-4 border-purple-500">
+                            <div class="flex items-center space-x-3 mb-2">
+                                <div class="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-user text-purple-600 text-xs"></i>
+                                </div>
+                                <h4 class="font-medium text-text-primary">人物心理</h4>
+                            </div>
+                            <p class="text-text-secondary">${line.replace(/^.*?：/, '').trim()}</p>
+                        </div>
+                    `;
+                } else if (line.includes('情节意义') || line.includes('3.')) {
+                    html += `
+                        <div class="bg-green-50 rounded-lg p-4 border-l-4 border-green-500">
+                            <div class="flex items-center space-x-3 mb-2">
+                                <div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-book text-green-600 text-xs"></i>
+                                </div>
+                                <h4 class="font-medium text-text-primary">情节意义</h4>
+                            </div>
+                            <p class="text-text-secondary">${line.replace(/^.*?：/, '').trim()}</p>
+                        </div>
+                    `;
+                } else if (line.includes('写作手法') || line.includes('4.')) {
+                    html += `
+                        <div class="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-500">
+                            <div class="flex items-center space-x-3 mb-2">
+                                <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-pen text-blue-600 text-xs"></i>
+                                </div>
+                                <h4 class="font-medium text-text-primary">写作手法</h4>
+                            </div>
+                            <p class="text-text-secondary">${line.replace(/^.*?：/, '').trim()}</p>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <p class="text-text-secondary">${line}</p>
+                        </div>
+                    `;
+                }
+            }
+            
+            return html;
+        }
+
+        // 响应式处理
+        function handleResize() {
+            const modal = document.querySelector('#annotation-modal');
+            const windowHeight = window.innerHeight;
+            const maxHeight = Math.max(400, windowHeight * 0.9);
+            
+            modal.style.maxHeight = `${maxHeight}px`;
+        }
+        
+        window.addEventListener('resize', handleResize);
+        handleResize(); // 初始化
+        
+        // 页面加载动画
+        setTimeout(() => {
+            document.querySelector('#annotation-modal').classList.add('modal-enter');
+        }, 100);
+    </script>
+
+    <!-- 版权信息 -->
+    <footer class="bg-white border-t border-border-light py-6">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col items-center space-y-4">
+                <div class="flex items-center space-x-3">
+                    <img src="logo.png" alt="小说智阅坊" class="w-8 h-8">
+                    <span class="text-sm text-text-secondary">上海大学 25121385 于承樟</span>
+                </div>
+                <p class="text-xs text-text-secondary">© 2024 小说智阅坊 - 智能阅读平台</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

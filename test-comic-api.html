@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>四格漫画API测试 - 小说智阅坊</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            padding: 30px;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2563eb;
+        }
+        
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            background: #f8fafc;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .btn-secondary:hover {
+            background: #e2e8f0;
+            transform: translateY(-1px);
+        }
+        
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .success {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #059669;
+        }
+        
+        .error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+        }
+        
+        .loading {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .comic-image {
+            max-width: 100%;
+            max-height: 300px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 四格漫画API测试</h1>
+        
+        <div class="test-section">
+            <h3>1. 测试服务器健康状态</h3>
+            <button onclick="testHealth()" class="btn-primary">测试 /api/health</button>
+            <div id="health-result" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>2. 测试豆包API连接</h3>
+            <button onclick="testDoubao()" class="btn-primary">测试豆包API</button>
+            <div id="doubao-result" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>3. 测试单格漫画生成</h3>
+            <button onclick="testSingleComic()" class="btn-primary">生成单格漫画</button>
+            <div id="single-comic-result" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>4. 测试完整四格漫画</h3>
+            <button onclick="testFullComic()" class="btn-primary">生成四格漫画</button>
+            <div id="full-comic-result" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>5. 环境信息</h3>
+            <button onclick="showEnvironment()" class="btn-secondary">显示环境信息</button>
+            <div id="env-result" class="result"></div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <button onclick="window.location.href='P-COMIC_VIEWER_NEW.html'" class="btn-secondary">返回四格漫画生成器</button>
+        </div>
+    </div>
+
+    <script>
+        // 测试服务器健康状态
+        async function testHealth() {
+            const resultDiv = document.getElementById('health-result');
+            resultDiv.innerHTML = '<span class="loading">⏳</span> 正在测试服务器健康状态...';
+            resultDiv.className = 'result';
+            
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                
+                resultDiv.innerHTML = JSON.stringify(data, null, 2);
+                resultDiv.className = response.ok ? 'result success' : 'result error';
+                
+            } catch (error) {
+                resultDiv.innerHTML = `错误: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+        
+        // 测试豆包API连接
+        async function testDoubao() {
+            const resultDiv = document.getElementById('doubao-result');
+            resultDiv.innerHTML = '<span class="loading">⏳</span> 正在测试豆包API连接...';
+            resultDiv.className = 'result';
+            
+            try {
+                const response = await fetch('/api/test-doubao');
+                const data = await response.json();
+                
+                resultDiv.innerHTML = JSON.stringify(data, null, 2);
+                resultDiv.className = response.ok ? 'result success' : 'result error';
+                
+            } catch (error) {
+                resultDiv.innerHTML = `错误: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+        
+        // 测试单格漫画生成
+        async function testSingleComic() {
+            const resultDiv = document.getElementById('single-comic-result');
+            resultDiv.innerHTML = '<span class="loading">⏳</span> 正在生成单格漫画...';
+            resultDiv.className = 'result';
+            
+            try {
+                const testDescription = "少年站在悬崖边，盘膝而坐，清风拂面";
+                
+                const response = await fetch('/api/generate-comic-panel', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        panelDescription: testDescription,
+                        panelNumber: 1
+                    })
+                });
+                
+                const data = await response.json();
+                
+                let resultHTML = JSON.stringify(data, null, 2);
+                
+                if (data.success && data.data && data.data.imageUrl) {
+                    resultHTML += `\n\n<img src="${data.data.imageUrl}" alt="生成的漫画" class="comic-image" onerror="this.style.display='none'">`;
+                }
+                
+                resultDiv.innerHTML = resultHTML;
+                resultDiv.className = response.ok ? 'result success' : 'result error';
+                
+            } catch (error) {
+                resultDiv.innerHTML = `错误: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+        
+        // 测试完整四格漫画
+        async function testFullComic() {
+            const resultDiv = document.getElementById('full-comic-result');
+            resultDiv.innerHTML = '<span class="loading">⏳</span> 正在生成四格漫画...';
+            resultDiv.className = 'result';
+            
+            try {
+                const panelDescriptions = [
+                    "少年在悬崖边盘膝而坐，开始修炼",
+                    "体内斗气缓缓流动，周围空气波动",
+                    "突然斗气爆发，少年面露痛苦之色",
+                    "修炼结束，少年睁开眼睛，气息平稳"
+                ];
+                
+                const response = await fetch('/api/generate-comic-batch', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        panelDescriptions: panelDescriptions
+                    })
+                });
+                
+                const data = await response.json();
+                
+                let resultHTML = JSON.stringify(data, null, 2);
+                
+                if (data.success && data.data && Array.isArray(data.data)) {
+                    data.data.forEach((panel, index) => {
+                        if (panel.success && panel.imageUrl) {
+                            resultHTML += `\n\n第${panel.panelNumber}格漫画:`;
+                            resultHTML += `\n<img src="${panel.imageUrl}" alt="漫画第${panel.panelNumber}格" class="comic-image" onerror="this.style.display='none'">`;
+                        }
+                    });
+                }
+                
+                resultDiv.innerHTML = resultHTML;
+                resultDiv.className = response.ok ? 'result success' : 'result error';
+                
+            } catch (error) {
+                resultDiv.innerHTML = `错误: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+        
+        // 显示环境信息
+        function showEnvironment() {
+            const resultDiv = document.getElementById('env-result');
+            
+            const envInfo = {
+                hostname: window.location.hostname,
+                protocol: window.location.protocol,
+                isNetlify: window.location.hostname.includes('netlify.app'),
+                userAgent: navigator.userAgent,
+                timestamp: new Date().toISOString()
+            };
+            
+            resultDiv.innerHTML = JSON.stringify(envInfo, null, 2);
+            resultDiv.className = 'result success';
+        }
+        
+        // 页面加载时自动测试健康状态
+        window.addEventListener('load', function() {
+            setTimeout(testHealth, 1000);
+        });
+    </script>
+</body>
+</html>

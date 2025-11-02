@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>语义关系网络 - 小说智阅坊</title>
+    <script src="https://unpkg.byted-static.com/coze/space_ppt_lib/1.0.3-alpha.12/lib/tailwindcss.js"></script>
+    <script src="https://unpkg.byted-static.com/fortawesome/fontawesome-free/6.7.2/js/all.min.js" data-auto-replace-svg="nest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#64748b',
+                        tertiary: '#059669',
+                        success: '#10b981',
+                        danger: '#ef4444',
+                        info: '#3b82f6',
+                        'text-primary': '#1e293b',
+                        'text-secondary': '#64748b',
+                        'bg-light': '#f8fafc',
+                        'border-light': '#e2e8f0'
+                    },
+                    boxShadow: {
+                        'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+                        'card-hover': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .sidebar-collapsed {
+            width: 56px;
+        }
+        
+        .sidebar-expanded {
+            width: 240px;
+        }
+        
+        .main-content-expanded {
+            margin-left: 240px;
+        }
+        
+        .main-content-collapsed {
+            margin-left: 56px;
+        }
+        
+        .nav-item-active {
+            background-color: #dbeafe;
+            color: #2563eb;
+            border-right: 3px solid #2563eb;
+        }
+        
+        .nav-item:hover {
+            background-color: #f1f5f9;
+            color: #2563eb;
+        }
+        
+        .search-focus:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .network-container {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }
+        
+        .network-node {
+            position: absolute;
+            background: white;
+            border: 2px solid #2563eb;
+            border-radius: 50%;
+            padding: 8px 12px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1e293b;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+        
+        .network-node:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+            border-color: #1d4ed8;
+        }
+        
+        .network-node.selected {
+            border-color: #10b981;
+            background-color: #f0fdf4;
+            transform: scale(1.1);
+        }
+        
+        .network-link {
+            position: absolute;
+            background: #e2e8f0;
+            height: 2px;
+            transform-origin: left center;
+            z-index: 1;
+        }
+        
+        .node-detail-panel {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 16px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .zoom-controls {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            z-index: 10;
+        }
+        
+        .zoom-btn {
+            width: 36px;
+            height: 36px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+        }
+        
+        .zoom-btn:hover {
+            background: #f8fafc;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body class="bg-bg-light min-h-screen">
+    <!-- 顶部导航栏 -->
+    <header id="top-navbar" class="fixed top-0 left-0 right-0 bg-white border-b border-border-light h-16 z-50">
+        <div class="flex items-center justify-between h-full px-6">
+            <!-- 左侧：Logo和菜单切换 -->
+            <div class="flex items-center space-x-4">
+                <button id="sidebar-toggle" class="p-2 rounded-lg hover:bg-gray-100 lg:hidden">
+                    <i class="fas fa-bars text-gray-600"></i>
+                </button>
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                        <i class="fas fa-book-open text-white text-sm"></i>
+                    </div>
+                    <h1 class="text-xl font-bold text-text-primary">小说智阅坊</h1>
+                </div>
+            </div>
+            
+            <!-- 中间：小说标题和返回 -->
+            <div class="flex items-center space-x-4">
+                <button id="back-to-shelf" class="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                    <i class="fas fa-arrow-left text-gray-600"></i>
+                    <span class="text-gray-700">返回书架</span>
+                </button>
+                <div class="text-center">
+                    <h2 id="novel-title" class="text-lg font-semibold text-text-primary">斗破苍穹</h2>
+                    <p class="text-sm text-text-secondary">天蚕土豆</p>
+                </div>
+            </div>
+            
+            <!-- 右侧：搜索、用户 -->
+            <div class="flex items-center space-x-4">
+                <div class="relative hidden sm:block">
+                    <input type="text" id="global-search" placeholder="搜索小说..." 
+                           class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg search-focus">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+                <button id="user-menu" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100">
+                    <img src="https://s.coze.cn/image/pt_QXpSYt48/" 
+                         alt="用户头像" class="w-8 h-8 rounded-full" data-category="人物">
+                    <span class="hidden md:block text-text-primary">读者</span>
+                    <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 左侧菜单 -->
+    <aside id="sidebar" class="fixed left-0 top-16 bottom-0 bg-white border-r border-border-light sidebar-expanded z-40 transition-all duration-300">
+        <nav class="p-4 space-y-2">
+            <a href="P-HOME.html" id="nav-home" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-home w-5"></i>
+                <span class="sidebar-text">首页</span>
+            </a>
+            <a href="P-SHELF.html" id="nav-shelf" class="nav-item nav-item-active flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium">
+                <i class="fas fa-bookmark w-5"></i>
+                <span class="sidebar-text">我的书架</span>
+            </a>
+            <a href="P-RECOMMEND.html" id="nav-recommend" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-star w-5"></i>
+                <span class="sidebar-text">为你推荐</span>
+            </a>
+            <a href="P-USER_CENTER.html" id="nav-user" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-user w-5"></i>
+                <span class="sidebar-text">用户中心</span>
+            </a>
+            <a href="P-HELP.html" id="nav-help" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-question-circle w-5"></i>
+                <span class="sidebar-text">帮助中心</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main id="main-content" class="main-content-expanded pt-16 min-h-screen transition-all duration-300">
+        <div class="p-6 max-w-7xl mx-auto">
+            <!-- 页面头部 -->
+            <div id="page-header" class="mb-8">
+                <nav id="breadcrumb" class="text-sm text-text-secondary mb-4">
+                    <span>首页</span>
+                    <i class="fas fa-chevron-right mx-2"></i>
+                    <span>书架</span>
+                    <i class="fas fa-chevron-right mx-2"></i>
+                    <span id="breadcrumb-novel-title">斗破苍穹</span>
+                    <i class="fas fa-chevron-right mx-2"></i>
+                    <span class="text-primary">语义关系网络</span>
+                </nav>
+                <h2 class="text-2xl font-bold text-text-primary">语义关系网络</h2>
+                <p class="text-text-secondary mt-2">可视化展示小说中关键概念、地点、事件之间的关联</p>
+            </div>
+
+            <!-- 语义关系网络展示区 -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 左侧：网络展示区 -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-xl shadow-card p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-text-primary">语义关系网络</h3>
+                            <div class="flex items-center space-x-2">
+                                <button id="reset-view" class="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-sm text-gray-700">
+                                    <i class="fas fa-redo mr-1"></i>重置视图
+                                </button>
+                                <button id="fullscreen-mode" class="px-3 py-1 bg-primary hover:bg-blue-600 rounded text-sm text-white">
+                                    <i class="fas fa-expand mr-1"></i>全屏
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="network-container" class="network-container bg-gray-50 h-96 relative">
+                            <!-- 缩放控制 -->
+                            <div class="zoom-controls flex flex-col space-y-2">
+                                <button id="zoom-in" class="zoom-btn">
+                                    <i class="fas fa-plus text-gray-600"></i>
+                                </button>
+                                <button id="zoom-out" class="zoom-btn">
+                                    <i class="fas fa-minus text-gray-600"></i>
+                                </button>
+                                <button id="zoom-fit" class="zoom-btn">
+                                    <i class="fas fa-expand-arrows-alt text-gray-600"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- 网络节点将通过JavaScript动态生成 -->
+                        </div>
+                        
+                        <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+                            <div class="flex items-center space-x-2 mb-2">
+                                <i class="fas fa-info-circle text-blue-600"></i>
+                                <span class="text-sm font-medium text-blue-800">操作提示</span>
+                            </div>
+                            <ul class="text-sm text-blue-700 space-y-1">
+                                <li>• 点击节点查看详细信息</li>
+                                <li>• 拖拽节点调整位置</li>
+                                <li>• 鼠标滚轮缩放网络</li>
+                                <li>• 拖拽空白区域平移网络</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧：节点详情面板 -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-xl shadow-card p-6">
+                        <h3 class="text-lg font-semibold text-text-primary mb-4">节点详情</h3>
+                        
+                        <div id="node-detail" class="node-detail-panel">
+                            <div class="text-center py-8 text-gray-500">
+                                <i class="fas fa-mouse-pointer text-3xl mb-2"></i>
+                                <p class="text-sm">点击网络中的节点查看详细信息</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6">
+                            <h4 class="font-medium text-text-primary mb-3">节点类型说明</h4>
+                            <div class="space-y-2">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
+                                    <span class="text-sm text-text-secondary">概念节点</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                                    <span class="text-sm text-text-secondary">地点节点</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-3 h-3 bg-purple-500 rounded-full"></div>
+                                    <span class="text-sm text-text-secondary">事件节点</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                                    <span class="text-sm text-text-secondary">物品节点</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 关联统计信息 -->
+            <div class="mt-6">
+                <div class="bg-white rounded-xl shadow-card p-6">
+                    <h3 class="text-lg font-semibold text-text-primary mb-4">关联统计</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="text-center p-4 bg-blue-50 rounded-lg">
+                            <div class="text-2xl font-bold text-blue-600">12</div>
+                            <div class="text-sm text-blue-800">概念节点</div>
+                        </div>
+                        <div class="text-center p-4 bg-green-50 rounded-lg">
+                            <div class="text-2xl font-bold text-green-600">8</div>
+                            <div class="text-sm text-green-800">地点节点</div>
+                        </div>
+                        <div class="text-center p-4 bg-purple-50 rounded-lg">
+                            <div class="text-2xl font-bold text-purple-600">15</div>
+                            <div class="text-sm text-purple-800">事件节点</div>
+                        </div>
+                        <div class="text-center p-4 bg-red-50 rounded-lg">
+                            <div class="text-2xl font-bold text-red-600">6</div>
+                            <div class="text-sm text-red-800">物品节点</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 全屏模态框 -->
+    <div id="fullscreen-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="absolute inset-4 bg-white rounded-xl flex flex-col">
+            <div class="flex items-center justify-between p-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-text-primary">语义关系网络 - 全屏模式</h3>
+                <button id="close-fullscreen" class="p-2 hover:bg-gray-100 rounded">
+                    <i class="fas fa-times text-gray-600"></i>
+                </button>
+            </div>
+            <div id="fullscreen-network" class="flex-1 bg-gray-50 relative">
+                <!-- 全屏网络内容将通过JavaScript动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入API配置 -->
+    <script src="api-config.js"></script>
+    
+    <script>
+        // 语义网络数据
+        const semanticNetworkData = {
+            nodes: [
+                { id: 1, name: "斗气", type: "concept", x: 150, y: 100, size: 20, color: "#3b82f6", 
+                  description: "小说中的核心能量体系，是修炼者力量的来源。分为多个等级，从斗之气到斗帝。"},
+                { id: 2, name: "萧炎", type: "concept", x: 300, y: 200, size: 22, color: "#3b82f6", 
+                  description: "小说主角，出身于萧家，拥有神秘的戒指，最终成长为斗帝。"},
+                { id: 3, name: "乌坦城", type: "location", x: 200, y: 300, size: 18, color: "#10b981", 
+                  description: "萧炎的故乡，加玛帝国的一座城市，是故事开始的地方。"},
+                { id: 4, name: "萧家", type: "concept", x: 250, y: 250, size: 19, color: "#3b82f6", 
+                  description: "萧炎所在的家族，曾经是乌坦城的三大家族之一。"},
+                { id: 5, name: "斗技", type: "concept", x: 400, y: 150, size: 18, color: "#3b82f6", 
+                  description: "运用斗气的技巧，分为天、地、玄、黄四个等级。"},
+                { id: 6, name: "青莲地心火", type: "item", x: 450, y: 300, size: 20, color: "#ef4444", 
+                  description: "异火榜排名第十九的异火，具有强大的火焰力量。"},
+                { id: 7, name: "纳兰嫣然", type: "concept", x: 100, y: 200, size: 19, color: "#3b82f6", 
+                  description: "云岚宗少宗主，曾与萧炎有婚约，后解除婚约成为萧炎的对手。"},
+                { id: 8, name: "云岚宗", type: "location", x: 50, y: 150, size: 18, color: "#10b981", 
+                  description: "加玛帝国的顶级势力之一，纳兰嫣然所在的宗门。"},
+                { id: 9, name: "药老", type: "concept", x: 350, y: 100, size: 21, color: "#3b82f6", 
+                  description: "萧炎的导师，本体是灵魂体，居住在萧炎的戒指中。"},
+                { id: 10, name: "炼药师", type: "concept", x: 400, y: 50, size: 18, color: "#3b82f6", 
+                  description: "能够炼制丹药的特殊职业，在斗气大陆地位崇高。"},
+                { id: 11, name: "婚约解除", type: "event", x: 150, y: 250, size: 18, color: "#8b5cf6", 
+                  description: "纳兰嫣然前往萧家解除与萧炎的婚约，是故事的重要转折点。"},
+                { id: 12, name: "斗之气三段", type: "concept", x: 200, y: 150, size: 17, color: "#3b82f6", 
+                  description: "萧炎曾经的斗气等级，被认为是修炼废柴。"},
+                { id: 13, name: "戒指", type: "item", x: 320, y: 180, size: 16, color: "#ef4444", 
+                  description: "萧炎母亲留下的神秘戒指，内有药老的灵魂体。"},
+                { id: 14, name: "加玛帝国", type: "location", x: 100, y: 350, size: 19, color: "#10b981", 
+                  description: "故事主要发生的国家，拥有多个强大的势力。"},
+                { id: 15, name: "斗技阁", type: "location", x: 280, y: 320, size: 16, color: "#10b981", 
+                  description: "萧家族内存储斗技的地方，萧炎曾在此获得基础斗技。"}
+            ],
+            links: [
+                { source: 1, target: 2, label: "修炼" },
+                { source: 1, target: 5, label: "运用" },
+                { source: 2, target: 3, label: "出身" },
+                { source: 2, target: 4, label: "家族" },
+                { source: 2, target: 9, label: "师徒" },
+                { source: 2, target: 13, label: "拥有" },
+                { source: 2, target: 11, label: "经历" },
+                { source: 2, target: 12, label: "等级" },
+                { source: 3, target: 14, label: "所属" },
+                { source: 4, target: 3, label: "位于" },
+                { source: 4, target: 15, label: "拥有" },
+                { source: 7, target: 8, label: "所属" },
+                { source: 7, target: 11, label: "发起" },
+                { source: 8, target: 14, label: "位于" },
+                { source: 9, target: 10, label: "职业" },
+                { source: 9, target: 13, label: "居住" },
+                { source: 2, target: 6, label: "获得" },
+                { source: 10, target: 6, label: "需要" }
+            ]
+        };
+
+        let currentScale = 1;
+        let currentTranslateX = 0;
+        let currentTranslateY = 0;
+        let selectedNode = null;
+        let isDragging = false;
+        let dragStart = { x: 0, y: 0 };
+        let networkContainer = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // 解析URL参数
+            function getUrlParams() {
+                const params = {};
+                const queryString = window.location.search.substring(1);
+                const urlParams = new URLSearchParams(queryString);
+                
+                for(const [key, value] of urlParams.entries()) {
+                    params[key] = value;
+                }
+                return params;
+            }
+
+            // 获取URL参数并更新页面内容
+            const params = getUrlParams();
+            if(params.novel) {
+                loadNovelData(params.novel);
+            }
+
+            // 初始化网络容器
+            networkContainer = document.querySelector('#network-container');
+            initializeNetwork();
+
+            // 侧边栏切换功能
+            const sidebarToggle = document.querySelector('#sidebar-toggle');
+            const sidebar = document.querySelector('#sidebar');
+            const mainContent = document.querySelector('#main-content');
+            const sidebarTexts = document.querySelectorAll('.sidebar-text');
+            
+            let sidebarCollapsed = false;
+            
+            sidebarToggle.addEventListener('click', () => {
+                sidebarCollapsed = !sidebarCollapsed;
+                
+                if (sidebarCollapsed) {
+                    sidebar.classList.remove('sidebar-expanded');
+                    sidebar.classList.add('sidebar-collapsed');
+                    mainContent.classList.remove('main-content-expanded');
+                    mainContent.classList.add('main-content-collapsed');
+                    sidebarTexts.forEach(text => text.style.display = 'none');
+                } else {
+                    sidebar.classList.remove('sidebar-collapsed');
+                    sidebar.classList.add('sidebar-expanded');
+                    mainContent.classList.remove('main-content-collapsed');
+                    mainContent.classList.add('main-content-expanded');
+                    sidebarTexts.forEach(text => text.style.display = 'block');
+                }
+            });
+
+            // 返回书架按钮
+            document.querySelector('#back-to-shelf').addEventListener('click', function() {
+                window.location.href = 'P-SHELF.html';
+            });
+
+            // 导航菜单点击事件
+            document.querySelector('#nav-home').addEventListener('click', function() {
+                window.location.href = 'P-HOME.html';
+            });
+
+            document.querySelector('#nav-shelf').addEventListener('click', function() {
+                window.location.href = 'P-SHELF.html';
+            });
+
+            document.querySelector('#nav-recommend').addEventListener('click', function() {
+                window.location.href = 'P-RECOMMEND.html';
+            });
+
+            document.querySelector('#nav-user').addEventListener('click', function() {
+                window.location.href = 'P-USER_CENTER.html';
+            });
+
+            document.querySelector('#nav-help').addEventListener('click', function() {
+                window.location.href = 'P-HELP.html';
+            });
+
+            // 搜索功能
+            document.querySelector('#global-search').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const keyword = e.target.value.trim();
+                    if (keyword) {
+                        window.location.href = `P-SEARCH_RESULT.html?q=${encodeURIComponent(keyword)}`;
+                    }
+                }
+            });
+
+            // 缩放控制
+            document.querySelector('#zoom-in').addEventListener('click', function() {
+                zoomNetwork(0.1);
+            });
+
+            document.querySelector('#zoom-out').addEventListener('click', function() {
+                zoomNetwork(-0.1);
+            });
+
+            document.querySelector('#zoom-fit').addEventListener('click', function() {
+                resetView();
+            });
+
+            // 重置视图
+            document.querySelector('#reset-view').addEventListener('click', function() {
+                resetView();
+            });
+
+            // 全屏模式
+            document.querySelector('#fullscreen-mode').addEventListener('click', function() {
+                enterFullscreen();
+            });
+
+            document.querySelector('#close-fullscreen').addEventListener('click', function() {
+                exitFullscreen();
+            });
+
+            // 鼠标滚轮缩放
+            networkContainer.addEventListener('wheel', function(e) {
+                e.preventDefault();
+                const delta = e.deltaY < 0 ? 0.05 : -0.05;
+                zoomNetwork(delta, e);
+            });
+
+            // 拖拽平移
+            let isPanning = false;
+            let panStart = { x: 0, y: 0 };
+
+            networkContainer.addEventListener('mousedown', function(e) {
+                if (e.target === networkContainer) {
+                    isPanning = true;
+                    panStart.x = e.clientX - currentTranslateX;
+                    panStart.y = e.clientY - currentTranslateY;
+                    networkContainer.style.cursor = 'grabbing';
+                }
+            });
+
+            document.addEventListener('mousemove', function(e) {
+                if (isPanning) {
+                    currentTranslateX = e.clientX - panStart.x;
+                    currentTranslateY = e.clientY - panStart.y;
+                    updateNetworkTransform();
+                }
+            });
+
+            document.addEventListener('mouseup', function() {
+                if (isPanning) {
+                    isPanning = false;
+                    networkContainer.style.cursor = 'grab';
+                }
+            });
+
+            // 响应式处理
+            function handleResize() {
+                if (window.innerWidth < 1024) {
+                    sidebar.style.transform = sidebarCollapsed ? 'translateX(0)' : 'translateX(0)';
+                } else {
+                    sidebar.style.transform = 'translateX(0)';
+                }
+            }
+
+            window.addEventListener('resize', handleResize);
+            handleResize();
+        });
+
+        async function loadNovelData(novelId) {
+            // 模拟加载不同小说的数据
+            const novelData = {
+                'novel-1': { 
+                    title: '斗破苍穹', 
+                    author: '天蚕土豆',
+                    content: '斗破苍穹讲述的是天才少年萧炎在创造了家族空前绝后的修炼纪录后突然成了废人，种种打击接踵而至。就在他即将绝望的时候，一缕灵魂从他手上的戒指里浮现，一扇全新的大门在面前开启，经过艰苦修炼最终成就辉煌的故事。'
+                },
+                'novel-2': { 
+                    title: '完美世界', 
+                    author: '辰东',
+                    content: '完美世界讲述的是石昊从大荒中走出，一路成长，最终成为独断万古的荒天帝的故事。他经历了无数的磨难和挑战，最终站在了世界的巅峰。'
+                },
+                'novel-3': { 
+                    title: '遮天', 
+                    author: '辰东',
+                    content: '遮天讲述的是叶凡因缘际会来到北斗星域，从此踏上修仙之路，历经磨难，最终成为天帝的故事。他见证了无数强者的崛起与陨落，最终站在了宇宙的巅峰。'
+                }
+            };
+
+            const novel = novelData[novelId] || novelData['novel-1'];
+            document.querySelector('#novel-title').textContent = novel.title;
+            document.querySelector('#breadcrumb-novel-title').textContent = novel.title;
+            
+            // 调用API生成语义分析
+            try {
+                const semanticAnalysis = await APIService.generateSemanticAnalysis(novel.title, novel.content);
+                // 可以在这里解析AI返回的语义分析结果，更新网络数据
+                console.log('语义分析结果:', semanticAnalysis);
+            } catch (error) {
+                console.error('生成语义分析失败:', error);
+            }
+        }
+
+        function initializeNetwork() {
+            // 清空容器
+            networkContainer.innerHTML = '';
+            
+            // 绘制连接线
+            semanticNetworkData.links.forEach(link => {
+                const sourceNode = semanticNetworkData.nodes.find(n => n.id === link.source);
+                const targetNode = semanticNetworkData.nodes.find(n => n.id === link.target);
+                
+                if (sourceNode && targetNode) {
+                    drawLink(sourceNode, targetNode, link.label);
+                }
+            });
+            
+            // 绘制节点
+            semanticNetworkData.nodes.forEach(node => {
+                drawNode(node);
+            });
+            
+            // 添加缩放控制
+            addZoomControls();
+        }
+
+        function drawLink(source, target, label) {
+            const link = document.createElement('div');
+            link.className = 'network-link';
+            
+            const x1 = source.x;
+            const y1 = source.y;
+            const x2 = target.x;
+            const y2 = target.y;
+            
+            const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+            const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+            
+            link.style.left = x1 + 'px';
+            link.style.top = y1 + 'px';
+            link.style.width = length + 'px';
+            link.style.transform = `rotate(${angle}deg)`;
+            
+            networkContainer.appendChild(link);
+        }
+
+        function drawNode(node) {
+            const nodeElement = document.createElement('div');
+            nodeElement.className = 'network-node';
+            nodeElement.id = `node-${node.id}`;
+            nodeElement.textContent = node.name;
+            nodeElement.style.left = node.x + 'px';
+            nodeElement.style.top = node.y + 'px';
+            nodeElement.style.width = node.size * 2 + 'px';
+            nodeElement.style.height = node.size * 2 + 'px';
+            nodeElement.style.borderColor = node.color;
+            
+            // 添加拖拽功能
+            let isNodeDragging = false;
+            let nodeDragStart = { x: 0, y: 0 };
+            
+            nodeElement.addEventListener('mousedown', function(e) {
+                e.stopPropagation();
+                isNodeDragging = true;
+                nodeDragStart.x = e.clientX - node.x;
+                nodeDragStart.y = e.clientY - node.y;
+                this.style.cursor = 'grabbing';
+            });
+            
+            document.addEventListener('mousemove', function(e) {
+                if (isNodeDragging) {
+                    node.x = e.clientX - nodeDragStart.x;
+                    node.y = e.clientY - nodeDragStart.y;
+                    nodeElement.style.left = node.x + 'px';
+                    nodeElement.style.top = node.y + 'px';
+                    redrawLinks();
+                }
+            });
+            
+            document.addEventListener('mouseup', function() {
+                if (isNodeDragging) {
+                    isNodeDragging = false;
+                    nodeElement.style.cursor = 'pointer';
+                }
+            });
+            
+            // 节点点击事件
+            nodeElement.addEventListener('click', function(e) {
+                e.stopPropagation();
+                selectNode(node);
+            });
+            
+            networkContainer.appendChild(nodeElement);
+        }
+
+        function redrawLinks() {
+            // 清除所有连接线
+            const links = networkContainer.querySelectorAll('.network-link');
+            links.forEach(link => link.remove());
+            
+            // 重新绘制连接线
+            semanticNetworkData.links.forEach(link => {
+                const sourceNode = semanticNetworkData.nodes.find(n => n.id === link.source);
+                const targetNode = semanticNetworkData.nodes.find(n => n.id === link.target);
+                
+                if (sourceNode && targetNode) {
+                    drawLink(sourceNode, targetNode, link.label);
+                }
+            });
+        }
+
+        function selectNode(node) {
+            // 清除之前的选中状态
+            if (selectedNode) {
+                const prevNodeElement = document.querySelector(`#node-${selectedNode.id}`);
+                if (prevNodeElement) {
+                    prevNodeElement.classList.remove('selected');
+                }
+            }
+            
+            // 设置新的选中状态
+            selectedNode = node;
+            const nodeElement = document.querySelector(`#node-${node.id}`);
+            if (nodeElement) {
+                nodeElement.classList.add('selected');
+            }
+            
+            // 显示节点详情
+            showNodeDetail(node);
+        }
+
+        function showNodeDetail(node) {
+            const detailPanel = document.querySelector('#node-detail');
+            
+            const typeNames = {
+                'concept': '概念',
+                'location': '地点',
+                'event': '事件',
+                'item': '物品'
+            };
+            
+            detailPanel.innerHTML = `
+                <div class="space-y-4">
+                    <div class="text-center">
+                        <div class="w-3 h-3 rounded-full mx-auto mb-2" style="background-color: ${node.color};"></div>
+                        <h4 class="text-lg font-semibold text-text-primary">${node.name}</h4>
+                        <p class="text-sm text-text-secondary">${typeNames[node.type]}</p>
+                    </div>
+                    <div class="border-t pt-4">
+                        <h5 class="font-medium text-text-primary mb-2">详细描述</h5>
+                        <p class="text-sm text-text-secondary leading-relaxed">${node.description}</p>
+                    </div>
+                    <div class="border-t pt-4">
+                        <h5 class="font-medium text-text-primary mb-2">关联节点</h5>
+                        <div class="space-y-1">
+                            ${getRelatedNodes(node).map(relatedNode => `
+                                <div class="flex items-center justify-between text-sm">
+                                    <span class="text-text-secondary">${relatedNode.name}</span>
+                                    <span class="text-xs text-text-secondary">${relatedNode.linkLabel}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getRelatedNodes(node) {
+            const relatedNodes = [];
+            
+            semanticNetworkData.links.forEach(link => {
+                if (link.source === node.id) {
+                    const targetNode = semanticNetworkData.nodes.find(n => n.id === link.target);
+                    if (targetNode) {
+                        relatedNodes.push({
+                            name: targetNode.name,
+                            linkLabel: link.label
+                        });
+                    }
+                } else if (link.target === node.id) {
+                    const sourceNode = semanticNetworkData.nodes.find(n => n.id === link.source);
+                    if (sourceNode) {
+                        relatedNodes.push({
+                            name: sourceNode.name,
+                            linkLabel: link.label
+                        });
+                    }
+                }
+            });
+            
+            return relatedNodes;
+        }
+
+        function zoomNetwork(delta, event = null) {
+            const newScale = currentScale + delta;
+            if (newScale >= 0.5 && newScale <= 3) {
+                currentScale = newScale;
+                
+                if (event && event.clientX && event.clientY) {
+                    // 围绕鼠标位置缩放
+                    const rect = networkContainer.getBoundingClientRect();
+                    const mouseX = event.clientX - rect.left;
+                    const mouseY = event.clientY - rect.top;
+                    
+                    currentTranslateX = mouseX - (mouseX - currentTranslateX) * (currentScale / (currentScale - delta));
+                    currentTranslateY = mouseY - (mouseY - currentTranslateY) * (currentScale / (currentScale - delta));
+                }
+                
+                updateNetworkTransform();
+            }
+        }
+
+        function updateNetworkTransform() {
+            const nodes = networkContainer.querySelectorAll('.network-node');
+            const links = networkContainer.querySelectorAll('.network-link');
+            
+            nodes.forEach(node => {
+                node.style.transform = `scale(${currentScale}) translate(${currentTranslateX}px, ${currentTranslateY}px)`;
+            });
+            
+            links.forEach(link => {
+                link.style.transform = `scale(${currentScale}) translate(${currentTranslateX}px, ${currentTranslateY}px) rotate(${link.style.transform.match(/rotate\(([^)]+)\)/)?.[1] || '0deg'})`;
+            });
+        }
+
+        function resetView() {
+            currentScale = 1;
+            currentTranslateX = 0;
+            currentTranslateY = 0;
+            updateNetworkTransform();
+        }
+
+        function addZoomControls() {
+            const controls = document.createElement('div');
+            controls.className = 'absolute bottom-4 right-4 flex flex-col space-y-2 z-10';
+            
+            controls.innerHTML = `
+                <button class="w-8 h-8 bg-white border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50">
+                    <i class="fas fa-plus text-gray-600 text-sm"></i>
+                </button>
+                <button class="w-8 h-8 bg-white border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50">
+                    <i class="fas fa-minus text-gray-600 text-sm"></i>
+                </button>
+                <button class="w-8 h-8 bg-white border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50">
+                    <i class="fas fa-expand-arrows-alt text-gray-600 text-sm"></i>
+                </button>
+            `;
+            
+            networkContainer.appendChild(controls);
+        }
+
+        function enterFullscreen() {
+            document.querySelector('#fullscreen-modal').classList.remove('hidden');
+            // 这里可以复制当前网络到全屏容器
+        }
+
+        function exitFullscreen() {
+            document.querySelector('#fullscreen-modal').classList.add('hidden');
+        }
+    </script>
+
+    <!-- 版权信息 -->
+    <footer class="bg-white border-t border-border-light py-6">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col items-center space-y-4">
+                <div class="flex items-center space-x-3">
+                    <img src="logo.png" alt="小说智阅坊" class="w-8 h-8">
+                    <span class="text-sm text-text-secondary">上海大学 25121385 于承樟</span>
+                </div>
+                <p class="text-xs text-text-secondary">© 2024 小说智阅坊 - 智能阅读平台</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

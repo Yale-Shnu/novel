@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>角色图谱 - 小说智阅坊</title>
+    <script src="https://unpkg.byted-static.com/coze/space_ppt_lib/1.0.3-alpha.12/lib/tailwindcss.js"></script>
+    <script src="https://unpkg.byted-static.com/fortawesome/fontawesome-free/6.7.2/js/all.min.js" data-auto-replace-svg="nest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#64748b',
+                        tertiary: '#059669',
+                        success: '#10b981',
+                        danger: '#ef4444',
+                        info: '#3b82f6',
+                        'text-primary': '#1e293b',
+                        'text-secondary': '#64748b',
+                        'bg-light': '#f8fafc',
+                        'border-light': '#e2e8f0'
+                    },
+                    boxShadow: {
+                        'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+                        'card-hover': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .sidebar-collapsed {
+            width: 56px;
+        }
+        
+        .sidebar-expanded {
+            width: 240px;
+        }
+        
+        .main-content-expanded {
+            margin-left: 240px;
+        }
+        
+        .main-content-collapsed {
+            margin-left: 56px;
+        }
+        
+        .nav-item-active {
+            background-color: #dbeafe;
+            color: #2563eb;
+            border-right: 3px solid #2563eb;
+        }
+        
+        .nav-item:hover {
+            background-color: #f1f5f9;
+            color: #2563eb;
+        }
+        
+        .search-focus:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        /* 角色图谱样式 */
+        .character-graph {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .graph-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+            animation: backgroundShift 10s ease-in-out infinite;
+        }
+
+        @keyframes backgroundShift {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-10px, -10px) scale(1.02); }
+        }
+
+        .character-node {
+            position: absolute;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border-radius: 50%;
+            border: 3px solid transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 4px 20px rgba(0, 0, 0, 0.1),
+                0 0 0 1px rgba(255, 255, 255, 0.8);
+            z-index: 10;
+            backdrop-filter: blur(10px);
+        }
+
+        .character-node:hover {
+            transform: scale(1.15) translateY(-2px);
+            box-shadow: 
+                0 8px 30px rgba(0, 0, 0, 0.2),
+                0 0 0 2px rgba(255, 255, 255, 0.9);
+            z-index: 20;
+        }
+
+        .character-node.selected {
+            border-color: #2563eb;
+            transform: scale(1.1);
+            box-shadow: 
+                0 8px 25px rgba(37, 99, 235, 0.3),
+                0 0 0 3px rgba(37, 99, 235, 0.2);
+        }
+
+        .character-avatar-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+        }
+
+        .character-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .character-text-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .importance-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .character-name {
+            font-size: 12px;
+            font-weight: 700;
+            text-align: center;
+            color: #1e293b;
+            max-width: 90px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+        }
+
+        .relationship-line {
+            position: absolute;
+            transform-origin: left center;
+            z-index: 5;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .relationship-line:hover {
+            opacity: 1 !important;
+            transform: scale(1.1) !important;
+        }
+
+        .relationship-label {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+            z-index: 6;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            text-align: center;
+            min-width: 40px;
+            max-width: 80px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .relationship-label:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 20;
+            max-width: none;
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        /* 关系线箭头 */
+        .relationship-line::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-left: 6px solid currentColor;
+            border-top: 4px solid transparent;
+            border-bottom: 4px solid transparent;
+        }
+
+        .character-details {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            margin-top: 20px;
+        }
+
+        .graph-controls {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            padding: 8px;
+            z-index: 30;
+        }
+
+        .graph-control-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: none;
+            background: white;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 2px;
+        }
+
+        .graph-control-btn:hover {
+            background: #f1f5f9;
+            color: #2563eb;
+        }
+
+        .loading-spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #2563eb;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-bg-light min-h-screen">
+    <!-- 顶部导航栏 -->
+    <header id="top-navbar" class="fixed top-0 left-0 right-0 bg-white border-b border-border-light h-16 z-50">
+        <div class="flex items-center justify-between h-full px-6">
+            <!-- 左侧：Logo和菜单切换 -->
+            <div class="flex items-center space-x-4">
+                <button id="sidebar-toggle" class="p-2 rounded-lg hover:bg-gray-100 lg:hidden">
+                    <i class="fas fa-bars text-gray-600"></i>
+                </button>
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                        <i class="fas fa-book-open text-white text-sm"></i>
+                    </div>
+                    <h1 class="text-xl font-bold text-text-primary">小说智阅坊</h1>
+                </div>
+            </div>
+            
+            <!-- 中间：小说标题和返回按钮 -->
+            <div class="flex items-center space-x-4">
+                <button id="back-to-shelf" class="hidden md:flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                    <i class="fas fa-arrow-left text-gray-600"></i>
+                    <span class="text-gray-700">返回书架</span>
+                </button>
+                <div class="text-center">
+                    <h2 id="novel-title" class="text-lg font-semibold text-text-primary">斗破苍穹</h2>
+                    <p class="text-sm text-text-secondary">角色图谱</p>
+                </div>
+            </div>
+            
+            <!-- 右侧：搜索、用户 -->
+            <div class="flex items-center space-x-4">
+                <div class="relative hidden sm:block">
+                    <input type="text" id="global-search" placeholder="搜索小说..." 
+                           class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg search-focus">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+                <button id="user-menu" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100">
+                    <img src="https://s.coze.cn/image/otF10H9jh5Q/" 
+                         alt="用户头像" class="w-8 h-8 rounded-full" data-category="人物">
+                    <span class="hidden md:block text-text-primary">读者</span>
+                    <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 左侧菜单 -->
+    <aside id="sidebar" class="fixed left-0 top-16 bottom-0 bg-white border-r border-border-light sidebar-expanded z-40 transition-all duration-300">
+        <nav class="p-4 space-y-2">
+            <a href="P-HOME.html" id="nav-home" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-home w-5"></i>
+                <span class="sidebar-text">首页</span>
+            </a>
+            <a href="P-SHELF.html" id="nav-shelf" class="nav-item nav-item-active flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium">
+                <i class="fas fa-bookmark w-5"></i>
+                <span class="sidebar-text">我的书架</span>
+            </a>
+            <a href="P-RECOMMEND.html" id="nav-recommend" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-star w-5"></i>
+                <span class="sidebar-text">为你推荐</span>
+            </a>
+            <a href="P-USER_CENTER.html" id="nav-user" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-user w-5"></i>
+                <span class="sidebar-text">用户中心</span>
+            </a>
+            <a href="P-HELP.html" id="nav-help" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-question-circle w-5"></i>
+                <span class="sidebar-text">帮助中心</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main id="main-content" class="main-content-expanded pt-16 min-h-screen transition-all duration-300">
+        <div class="p-6 max-w-7xl mx-auto">
+            <!-- 页面头部 -->
+            <div id="page-header" class="mb-8">
+                <nav id="breadcrumb" class="text-sm text-text-secondary mb-4">
+                    <a href="P-HOME.html" class="hover:text-primary">首页</a>
+                    <span class="mx-2">></span>
+                    <a href="P-SHELF.html" class="hover:text-primary">我的书架</a>
+                    <span class="mx-2">></span>
+                    <span id="breadcrumb-novel-title">斗破苍穹</span>
+                    <span class="mx-2">></span>
+                    <span class="text-text-primary">角色图谱</span>
+                </nav>
+                <h1 class="text-2xl font-bold text-text-primary">角色图谱</h1>
+                <p class="text-text-secondary mt-2">可视化展示小说中的主要角色关系网络</p>
+            </div>
+
+            <!-- 角色图谱区域 -->
+            <section id="character-graph-section" class="mb-8">
+                <div class="bg-white rounded-xl shadow-card overflow-hidden">
+                    <div class="p-6 border-b border-border-light">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold text-text-primary">角色关系网络</h3>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-sm text-text-secondary">按住鼠标拖拽可移动图谱，滚轮缩放</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 图谱加载状态 -->
+                    <div id="graph-loading" class="p-8 text-center">
+                        <div class="loading-spinner"></div>
+                        <p class="text-text-secondary mt-4">正在生成角色图谱...</p>
+                    </div>
+                    
+                    <!-- 角色图谱容器 -->
+                    <div id="character-graph-container" class="relative" style="display: none;">
+                        <div id="character-graph" class="character-graph">
+                            <!-- 图谱控制按钮 -->
+                            <div class="graph-controls">
+                                <button id="zoom-in" class="graph-control-btn" title="放大">
+                                    <i class="fas fa-search-plus"></i>
+                                </button>
+                                <button id="zoom-out" class="graph-control-btn" title="缩小">
+                                    <i class="fas fa-search-minus"></i>
+                                </button>
+                                <button id="reset-view" class="graph-control-btn" title="重置视图">
+                                    <i class="fas fa-home"></i>
+                                </button>
+                                <button id="fullscreen-graph" class="graph-control-btn" title="全屏查看">
+                                    <i class="fas fa-expand"></i>
+                                </button>
+                                <button id="regenerate-graph" class="graph-control-btn" title="重新生成图谱">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- 角色节点将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 角色详情面板 -->
+            <section id="character-details-section" class="mb-8">
+                <div id="character-details" class="character-details" style="display: none;">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-semibold text-text-primary">角色详情</h3>
+                        <button id="close-details" class="text-text-secondary hover:text-primary">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <div id="character-details-content">
+                        <!-- 角色详情内容将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+                
+                <div id="no-character-selected" class="character-details text-center py-12">
+                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-user text-gray-400 text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-text-primary mb-2">选择角色查看详情</h3>
+                    <p class="text-text-secondary">点击图谱中的角色节点来查看详细信息</p>
+                </div>
+            </section>
+
+            <!-- 关系说明 -->
+            <section id="relationship-legend" class="mb-8">
+                <div class="bg-white rounded-xl shadow-card p-6">
+                    <h3 class="text-lg font-semibold text-text-primary mb-4">关系类型说明</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-4 h-4 bg-red-500 rounded"></div>
+                            <span class="text-sm text-text-secondary">敌对关系</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-4 h-4 bg-blue-500 rounded"></div>
+                            <span class="text-sm text-text-secondary">朋友关系</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-4 h-4 bg-green-500 rounded"></div>
+                            <span class="text-sm text-text-secondary">亲属关系</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-4 h-4 bg-purple-500 rounded"></div>
+                            <span class="text-sm text-text-secondary">上下级关系</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- 引入API配置 -->
+    <script src="api-config.js"></script>
+    
+    <script>
+        // 基础角色数据（作为API生成失败时的备选）
+        const characterData = {
+            'doupocangqiong': {
+                novelTitle: '斗破苍穹',
+                characters: [
+                    {
+                        id: 'xiao-yan',
+                        name: '萧炎',
+                        avatar: 'https://s.coze.cn/image/OgL5i0eFtpo/',
+                        description: '本书主角，萧家三公子。前期因斗气尽失而被人嘲笑，后得药老相助，重新踏上修炼之路。性格坚韧、重情义，目标是成为斗帝，为家族和师父报仇。',
+                        personality: '坚韧不拔、重情重义、有恩报恩、有仇报仇',
+                        background: '出身于乌坦城三大家族之一的萧家，母亲早逝，父亲是萧战。因神秘原因导致斗气尽失，沦为家族笑柄。',
+                        keyEvents: [
+                            '获得药老指导，重新开始修炼',
+                            '在迦南学院结识众多好友',
+                            '创立炎盟，成为一方强者',
+                            '最终突破斗帝境界'
+                        ]
+                    },
+                    {
+                        id: 'yao-lao',
+                        name: '药老',
+                        avatar: 'https://s.coze.cn/image/uh2cf_pvp_k/',
+                        description: '萧炎的师父，本体是远古八族之一的药族成员。曾是斗尊强者，因遭徒弟韩枫背叛而灵魂体寄存在纳戒中。知识渊博，擅长炼药。',
+                        personality: '睿智、腹黑、护短、经验丰富',
+                        background: '远古药族成员，炼药师公会会长，被韩枫背叛后灵魂体存活。',
+                        keyEvents: [
+                            '收萧炎为徒，指导其修炼和炼药',
+                            '帮助萧炎获得多种异火',
+                            '重获肉身，恢复实力',
+                            '与萧炎一起对抗魂族'
+                        ]
+                    },
+                    {
+                        id: 'xiao-xun-er',
+                        name: '萧薰儿',
+                        avatar: 'https://s.coze.cn/image/8TlC5DDjEwE/',
+                        description: '萧炎的青梅竹马，真实身份是远古八族之一的古族大小姐。天赋异禀，对萧炎有着深厚的感情。',
+                        personality: '温柔、善良、聪慧、对萧炎专一',
+                        background: '古族族长之女，因家族安排来到萧家，与萧炎一同长大。',
+                        keyEvents: [
+                            '默默守护萧炎，在其低谷时不离不弃',
+                            '为萧炎提供重要帮助和资源',
+                            '在古族为萧炎争取支持',
+                            '最终与萧炎结为伴侣'
+                        ]
+                    }
+                ]
+            },
+            'default': {
+                novelTitle: '默认小说',
+                characters: [
+                    {
+                        id: 'protagonist',
+                        name: '主角',
+                        avatar: 'https://s.coze.cn/image/OgL5i0eFtpo/',
+                        description: '小说的主要角色，通常具有成长性和复杂性。',
+                        personality: '勇敢、善良、有成长性',
+                        background: '出身平凡，通过努力获得成长',
+                        keyEvents: [
+                            '开始冒险旅程',
+                            '遇到重要伙伴',
+                            '克服重大困难',
+                            '达成最终目标'
+                        ]
+                    },
+                    {
+                        id: 'mentor',
+                        name: '导师',
+                        avatar: 'https://s.coze.cn/image/uh2cf_pvp_k/',
+                        description: '指导主角成长的重要角色，通常经验丰富。',
+                        personality: '睿智、经验丰富、乐于助人',
+                        background: '拥有丰富的人生经历和专业知识',
+                        keyEvents: [
+                            '发现主角潜力',
+                            '传授知识和技能',
+                            '在关键时刻提供帮助',
+                            '见证主角成长'
+                        ]
+                    },
+                    {
+                        id: 'companion',
+                        name: '伙伴',
+                        avatar: 'https://s.coze.cn/image/8TlC5DDjEwE/',
+                        description: '陪伴主角一起冒险的重要角色。',
+                        personality: '忠诚、勇敢、可靠',
+                        background: '与主角有着共同的理想和目标',
+                        keyEvents: [
+                            '与主角相遇',
+                            '建立深厚友谊',
+                            '共同面对挑战',
+                            '互相支持成长'
+                        ]
+                    }
+                ]
+            }
+        };
+
+        // 图谱状态
+        let currentScale = 1;
+        let currentTranslateX = 0;
+        let currentTranslateY = 0;
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let selectedCharacter = null;
+        let characterGraphData = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // 解析URL参数
+            function getUrlParams() {
+                const params = {};
+                const queryString = window.location.search.substring(1);
+                const urlParams = new URLSearchParams(queryString);
+                
+                for(const [key, value] of urlParams.entries()) {
+                    params[key] = value;
+                }
+                return params;
+            }
+
+            // 获取小说ID
+            const params = getUrlParams();
+            const novelId = params.novel || 'doupocangqiong';
+
+            // 加载角色图谱
+            loadCharacterGraph(novelId);
+
+            // 侧边栏切换功能
+            const sidebarToggle = document.querySelector('#sidebar-toggle');
+            const sidebar = document.querySelector('#sidebar');
+            const mainContent = document.querySelector('#main-content');
+            const sidebarTexts = document.querySelectorAll('.sidebar-text');
+            
+            let sidebarCollapsed = false;
+            
+            sidebarToggle.addEventListener('click', () => {
+                sidebarCollapsed = !sidebarCollapsed;
+                
+                if (sidebarCollapsed) {
+                    sidebar.classList.remove('sidebar-expanded');
+                    sidebar.classList.add('sidebar-collapsed');
+                    mainContent.classList.remove('main-content-expanded');
+                    mainContent.classList.add('main-content-collapsed');
+                    sidebarTexts.forEach(text => text.style.display = 'none');
+                } else {
+                    sidebar.classList.remove('sidebar-collapsed');
+                    sidebar.classList.add('sidebar-expanded');
+                    mainContent.classList.remove('main-content-collapsed');
+                    mainContent.classList.add('main-content-expanded');
+                    sidebarTexts.forEach(text => text.style.display = 'block');
+                }
+            });
+
+            // 返回书架
+            document.querySelector('#back-to-shelf').addEventListener('click', function() {
+                window.location.href = 'P-SHELF.html';
+            });
+
+            // 搜索功能
+            document.querySelector('#global-search').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const keyword = e.target.value.trim();
+                    if (keyword) {
+                        window.location.href = `P-SEARCH_RESULT.html?q=${encodeURIComponent(keyword)}`;
+                    }
+                }
+            });
+
+            // 图谱控制按钮
+            document.querySelector('#zoom-in').addEventListener('click', function() {
+                zoomGraph(0.1);
+            });
+
+            document.querySelector('#zoom-out').addEventListener('click', function() {
+                zoomGraph(-0.1);
+            });
+
+            document.querySelector('#reset-view').addEventListener('click', function() {
+                resetGraphView();
+            });
+
+            document.querySelector('#fullscreen-graph').addEventListener('click', function() {
+                toggleFullscreen();
+            });
+
+            // 关闭角色详情
+            document.querySelector('#close-details').addEventListener('click', function() {
+                hideCharacterDetails();
+            });
+
+            // 重新生成图谱按钮
+            document.querySelector('#regenerate-graph').addEventListener('click', function() {
+                const params = getUrlParams();
+                const novelId = params.novel || 'doupocangqiong';
+                loadCharacterGraph(novelId);
+            });
+
+            // 图谱拖拽和缩放
+            setupGraphInteraction();
+        });
+
+        // 加载角色图谱
+        async function loadCharacterGraph(novelId) {
+            console.log('开始加载角色图谱，小说ID:', novelId);
+            
+            // 如果novelId为空或未定义，使用默认数据
+            if (!novelId || novelId === 'undefined') {
+                novelId = 'default';
+                console.log('使用默认小说数据');
+            }
+            
+            const novelData = characterData[novelId] || characterData['default'];
+            
+            if (!novelData) {
+                console.error('未找到小说数据:', novelId);
+                // 显示错误信息
+                document.querySelector('#graph-loading').innerHTML = `
+                    <div class="text-center py-8">
+                        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-medium text-text-primary mb-2">未找到小说数据</h3>
+                        <p class="text-text-secondary">请从书架或阅读器页面进入角色图谱</p>
+                        <button onclick="window.location.href='P-SHELF.html'" class="mt-4 px-6 py-2 bg-primary text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            返回书架
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            // 更新页面标题和面包屑
+            document.querySelector('#novel-title').textContent = novelData.novelTitle;
+            document.querySelector('#breadcrumb-novel-title').textContent = novelData.novelTitle;
+
+            try {
+                // 显示加载状态
+                document.querySelector('#graph-loading').style.display = 'block';
+                document.querySelector('#character-graph-container').style.display = 'none';
+                
+                console.log('开始调用AI生成角色关系网络...');
+                
+                // 调用API智能生成角色关系网络
+                const aiCharacterData = await generateAICharacterGraph(novelData);
+                characterGraphData = aiCharacterData;
+                
+                console.log('AI生成完成，开始渲染图谱...');
+                
+                // 显示图谱
+                document.querySelector('#graph-loading').style.display = 'none';
+                document.querySelector('#character-graph-container').style.display = 'block';
+                
+                // 渲染角色图谱
+                renderCharacterGraph(characterGraphData);
+                
+                console.log('角色图谱渲染完成');
+                
+            } catch (error) {
+                console.error('生成角色分析失败:', error);
+                
+                // 显示错误信息，但继续使用备选数据
+                document.querySelector('#graph-loading').innerHTML = `
+                    <div class="text-center py-8">
+                        <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-info-circle text-yellow-500 text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-medium text-text-primary mb-2">使用备选数据</h3>
+                        <p class="text-text-secondary">AI分析暂时不可用，已使用智能算法生成角色关系</p>
+                    </div>
+                `;
+                
+                // 延迟显示备选数据
+                setTimeout(() => {
+                    document.querySelector('#graph-loading').style.display = 'none';
+                    document.querySelector('#character-graph-container').style.display = 'block';
+                    
+                    // 为原始数据生成布局
+                    const layoutData = generateLayoutForCharacters(novelData.characters);
+                    characterGraphData = {
+                        ...novelData,
+                        characters: layoutData.characters,
+                        relationships: layoutData.relationships
+                    };
+                    
+                    renderCharacterGraph(characterGraphData);
+                    console.log('备选角色图谱渲染完成');
+                }, 2000);
+            }
+        }
+
+        // 调用API智能生成角色关系网络
+        async function generateAICharacterGraph(novelData) {
+            // 首先尝试获取小说文本内容进行分析
+            const novelContent = await getNovelContent(novelData.novelTitle);
+            
+            // 构建角色分析提示词，包含小说内容
+            const characterPrompt = `请分析小说《${novelData.novelTitle}》的角色关系网络。
+
+小说内容摘要：
+${novelContent}
+
+主要角色信息：
+${novelData.characters.map(char => `- ${char.name}: ${char.description}`).join('\n')}
+
+请基于小说内容分析角色关系，返回以下JSON格式：
+{
+  "characters": [
+    {
+      "id": "角色ID",
+      "name": "角色姓名",
+      "avatar": "头像URL",
+      "description": "角色描述",
+      "personality": "性格特点",
+      "background": "背景介绍",
+      "keyEvents": ["关键事件1", "关键事件2"],
+      "importance": 0.8, // 重要性评分(0-1)
+      "position": { "x": 50, "y": 50 } // 在图谱中的位置
+    }
+  ],
+  "relationships": [
+    {
+      "from": "角色ID1",
+      "to": "角色ID2",
+      "type": "关系类型",
+      "strength": 0.7, // 关系强度(0-1)
+      "color": "#颜色代码"
+    }
+  ]
+}
+
+请确保：
+1. 基于小说内容分析真实的关系
+2. 角色位置分布合理，避免重叠
+3. 关系类型准确反映角色间互动
+4. 重要角色位于图谱中心位置
+5. 关系强度反映互动频率和重要性`;
+
+            try {
+                console.log('开始调用AI分析角色关系...');
+                
+                // 调用API生成角色分析
+                const aiResponse = await window.apiService.generateText(characterPrompt, 2000);
+                console.log('AI分析完成，响应内容:', aiResponse);
+                
+                // 解析AI返回的JSON数据
+                const aiData = parseAIResponse(aiResponse);
+                console.log('解析后的AI数据:', aiData);
+                
+                if (!aiData || !aiData.characters || aiData.characters.length === 0) {
+                    throw new Error('AI返回数据格式错误或为空');
+                }
+                
+                // 合并AI生成的数据与原始数据
+                const mergedData = mergeCharacterData(novelData, aiData);
+                console.log('合并后的角色数据:', mergedData);
+                
+                return mergedData;
+                
+            } catch (error) {
+                console.error('AI角色分析失败:', error);
+                console.log('使用备选算法生成角色关系...');
+                
+                // 返回基于原始数据的智能布局
+                const fallbackData = generateLayoutForCharacters(novelData.characters);
+                console.log('备选算法生成的数据:', fallbackData);
+                return fallbackData;
+            }
+        }
+
+        // 获取小说文本内容
+        async function getNovelContent(novelTitle) {
+            try {
+                // 尝试从本地存储或API获取小说内容
+                const cachedContent = localStorage.getItem(`novel_content_${novelTitle}`);
+                if (cachedContent) {
+                    return cachedContent;
+                }
+                
+                // 模拟小说内容（实际项目中应该从API获取）
+                const sampleContent = {
+                    '斗破苍穹': `《斗破苍穹》是天蚕土豆创作的玄幻小说，讲述了少年萧炎从天才沦为废柴，再到重新崛起的故事。
+
+主要情节：
+萧炎本是萧家天才，但因神秘原因斗气尽失，沦为家族笑柄。在药老的帮助下，他重新踏上修炼之路，获得异火，创立炎盟，最终成为斗帝强者。
+
+关键角色关系：
+- 萧炎与药老：师徒关系，药老指导萧炎修炼和炼药
+- 萧炎与萧薰儿：青梅竹马，恋人关系
+- 萧炎与纳兰嫣然：曾经的未婚妻，后为对手
+- 萧炎与美杜莎女王：从敌对到合作，最终成为伴侣
+- 萧炎与魂族：主要敌对势力`
+                };
+                
+                const content = sampleContent[novelTitle] || `《${novelTitle}》是一部精彩的小说，讲述了主角的成长历程和复杂的人物关系。`;
+                
+                // 缓存内容
+                localStorage.setItem(`novel_content_${novelTitle}`, content);
+                
+                return content;
+                
+            } catch (error) {
+                console.error('获取小说内容失败:', error);
+                return `《${novelTitle}》是一部精彩的小说，包含丰富的人物关系和情节发展。`;
+            }
+        }
+
+        // 解析AI返回的响应
+        function parseAIResponse(response) {
+            try {
+                console.log('开始解析AI响应:', response);
+                
+                // 首先尝试直接解析整个响应
+                try {
+                    const parsed = JSON.parse(response);
+                    console.log('直接解析成功:', parsed);
+                    return parsed;
+                } catch (e) {
+                    console.log('直接解析失败，尝试提取JSON...');
+                }
+                
+                // 尝试从响应中提取JSON
+                const jsonMatch = response.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    const jsonStr = jsonMatch[0];
+                    console.log('提取到JSON字符串:', jsonStr);
+                    const parsed = JSON.parse(jsonStr);
+                    console.log('JSON解析成功:', parsed);
+                    return parsed;
+                }
+                
+                // 如果都没有找到，尝试处理可能的文本格式
+                console.log('未找到标准JSON，尝试处理文本格式...');
+                
+                // 检查响应是否包含特定的错误信息
+                if (response.includes('error') || response.includes('失败') || response.includes('无法')) {
+                    throw new Error('AI返回错误信息: ' + response);
+                }
+                
+                // 如果响应看起来是纯文本，尝试构建基本数据结构
+                if (response.length > 100) {
+                    console.log('响应为文本格式，使用备选数据');
+                    return generateFallbackData();
+                }
+                
+                throw new Error('未找到有效的JSON数据，响应内容: ' + response.substring(0, 200));
+                
+            } catch (error) {
+                console.error('解析AI响应失败:', error);
+                console.log('使用备选数据');
+                return generateFallbackData();
+            }
+        }
+
+        // 生成备选数据
+        function generateFallbackData() {
+            return {
+                characters: [
+                    {
+                        id: 'xiao-yan',
+                        name: '萧炎',
+                        avatar: 'https://s.coze.cn/image/OgL5i0eFtpo/',
+                        description: '本书主角，萧家三公子。前期因斗气尽失而被人嘲笑，后得药老相助，重新踏上修炼之路。性格坚韧、重情义，目标是成为斗帝，为家族和师父报仇。',
+                        personality: '坚韧不拔、重情重义、有恩报恩、有仇报仇',
+                        background: '出身于乌坦城三大家族之一的萧家，母亲早逝，父亲是萧战。因神秘原因导致斗气尽失，沦为家族笑柄。',
+                        keyEvents: [
+                            '获得药老指导，重新开始修炼',
+                            '在迦南学院结识众多好友',
+                            '创立炎盟，成为一方强者',
+                            '最终突破斗帝境界'
+                        ],
+                        importance: 0.95,
+                        position: { x: 50, y: 50 }
+                    },
+                    {
+                        id: 'yao-lao',
+                        name: '药老',
+                        avatar: 'https://s.coze.cn/image/uh2cf_pvp_k/',
+                        description: '萧炎的师父，本体是远古八族之一的药族成员。曾是斗尊强者，因遭徒弟韩枫背叛而灵魂体寄存在纳戒中。知识渊博，擅长炼药。',
+                        personality: '睿智、腹黑、护短、经验丰富',
+                        background: '远古药族成员，炼药师公会会长，被韩枫背叛后灵魂体存活。',
+                        keyEvents: [
+                            '收萧炎为徒，指导其修炼和炼药',
+                            '帮助萧炎获得多种异火',
+                            '重获肉身，恢复实力',
+                            '与萧炎一起对抗魂族'
+                        ],
+                        importance: 0.85,
+                        position: { x: 30, y: 40 }
+                    },
+                    {
+                        id: 'xiao-xun-er',
+                        name: '萧薰儿',
+                        avatar: 'https://s.coze.cn/image/8TlC5DDjEwE/',
+                        description: '萧炎的青梅竹马，真实身份是远古八族之一的古族大小姐。天赋异禀，对萧炎有着深厚的感情。',
+                        personality: '温柔、善良、聪慧、对萧炎专一',
+                        background: '古族族长之女，因家族安排来到萧家，与萧炎一同长大。',
+                        keyEvents: [
+                            '默默守护萧炎，在其低谷时不离不弃',
+                            '为萧炎提供重要帮助和资源',
+                            '在古族为萧炎争取支持',
+                            '最终与萧炎结为伴侣'
+                        ],
+                        importance: 0.80,
+                        position: { x: 70, y: 40 }
+                    }
+                ],
+                relationships: [
+                    {
+                        from: 'xiao-yan',
+                        to: 'yao-lao',
+                        type: '师徒',
+                        strength: 0.95,
+                        color: '#6366f1'
+                    },
+                    {
+                        from: 'xiao-yan',
+                        to: 'xiao-xun-er',
+                        type: '恋人',
+                        strength: 0.90,
+                        color: '#ec4899'
+                    },
+                    {
+                        from: 'yao-lao',
+                        to: 'xiao-xun-er',
+                        type: '朋友',
+                        strength: 0.70,
+                        color: '#3b82f6'
+                    }
+                ]
+            };
+        }
+
+        // 合并角色数据
+        function mergeCharacterData(originalData, aiData) {
+            console.log('开始合并角色数据...');
+            console.log('原始数据:', originalData);
+            console.log('AI数据:', aiData);
+            
+            if (!aiData || !aiData.characters || aiData.characters.length === 0) {
+                console.log('AI数据无效，使用备选布局');
+                return generateLayoutForCharacters(originalData.characters);
+            }
+
+            // 确保角色数据有完整的信息
+            const mergedCharacters = aiData.characters.map(aiChar => {
+                // 查找原始数据中对应的角色
+                const originalChar = originalData.characters.find(origChar => origChar.id === aiChar.id);
+                
+                if (originalChar) {
+                    // 合并数据，优先使用AI生成的数据，但保留原始的重要信息
+                    return {
+                        ...originalChar, // 保留原始数据
+                        ...aiChar,       // 使用AI生成的数据覆盖
+                        // 确保关键字段存在
+                        id: aiChar.id || originalChar.id,
+                        name: aiChar.name || originalChar.name,
+                        avatar: aiChar.avatar || originalChar.avatar,
+                        importance: aiChar.importance || originalChar.importance || 0.5,
+                        position: aiChar.position || originalChar.position || { x: 50, y: 50 }
+                    };
+                } else {
+                    // 如果AI生成了新角色，确保有基本数据
+                    return {
+                        ...aiChar,
+                        id: aiChar.id || 'character-' + Math.random().toString(36).substr(2, 9),
+                        importance: aiChar.importance || 0.5,
+                        position: aiChar.position || { x: 50, y: 50 }
+                    };
+                }
+            });
+
+            const result = {
+                novelTitle: originalData.novelTitle,
+                characters: mergedCharacters,
+                relationships: aiData.relationships || []
+            };
+            
+            console.log('合并后的数据:', result);
+            return result;
+        }
+
+        // 为角色生成智能布局
+        function generateLayoutForCharacters(characters) {
+            const centerX = 50;
+            const centerY = 50;
+            const radius = 35;
+            
+            // 根据角色重要性排序，重要角色靠近中心
+            const sortedCharacters = [...characters].sort((a, b) => {
+                const importanceA = a.importance || 0.5;
+                const importanceB = b.importance || 0.5;
+                return importanceB - importanceA;
+            });
+            
+            const positionedCharacters = sortedCharacters.map((char, index) => {
+                // 重要角色靠近中心，次要角色在外围
+                const baseDistance = radius * (0.3 + (index / sortedCharacters.length) * 0.7);
+                
+                // 使用黄金角度避免重叠
+                const goldenAngle = 137.5 * (Math.PI / 180);
+                const angle = index * goldenAngle;
+                
+                // 添加轻微随机偏移避免完全对称
+                const randomOffset = 0.1;
+                const distance = baseDistance * (1 + (Math.random() - 0.5) * randomOffset);
+                
+                // 计算位置
+                const x = centerX + Math.cos(angle) * distance;
+                const y = centerY + Math.sin(angle) * distance;
+                
+                // 确保位置在合理范围内
+                const boundedX = Math.max(10, Math.min(90, x));
+                const boundedY = Math.max(10, Math.min(90, y));
+                
+                return {
+                    ...char,
+                    position: {
+                        x: boundedX,
+                        y: boundedY
+                    },
+                    importance: char.importance || (0.7 - (index / sortedCharacters.length) * 0.4)
+                };
+            });
+
+            // 生成智能关系
+            const relationships = generateSmartRelationships(positionedCharacters);
+            
+            return {
+                characters: positionedCharacters,
+                relationships: relationships
+            };
+        }
+
+        // 生成智能关系
+        function generateSmartRelationships(characters) {
+            const relationships = [];
+            const relationshipTypes = [
+                { type: '师徒', color: '#6366f1', weight: 0.3 },
+                { type: '朋友', color: '#3b82f6', weight: 0.4 },
+                { type: '恋人', color: '#ec4899', weight: 0.2 },
+                { type: '敌对', color: '#ef4444', weight: 0.1 },
+                { type: '亲属', color: '#10b981', weight: 0.2 },
+                { type: '上下级', color: '#f59e0b', weight: 0.3 }
+            ];
+
+            // 为主角生成核心关系
+            const protagonist = characters.find(char => char.name === '萧炎');
+            if (protagonist) {
+                characters.forEach(char => {
+                    if (char.id !== protagonist.id) {
+                        const relationship = relationshipTypes[Math.floor(Math.random() * relationshipTypes.length)];
+                        relationships.push({
+                            from: protagonist.id,
+                            to: char.id,
+                            type: relationship.type,
+                            strength: 0.6 + Math.random() * 0.4,
+                            color: relationship.color
+                        });
+                    }
+                });
+            }
+
+            // 随机生成一些额外关系
+            const extraRelationships = Math.min(3, characters.length - 1);
+            for (let i = 0; i < extraRelationships; i++) {
+                const fromIndex = Math.floor(Math.random() * characters.length);
+                const toIndex = Math.floor(Math.random() * characters.length);
+                
+                if (fromIndex !== toIndex) {
+                    const fromChar = characters[fromIndex];
+                    const toChar = characters[toIndex];
+                    
+                    // 检查是否已存在关系
+                    const exists = relationships.some(rel => 
+                        (rel.from === fromChar.id && rel.to === toChar.id) ||
+                        (rel.from === toChar.id && rel.to === fromChar.id)
+                    );
+                    
+                    if (!exists) {
+                        const relationship = relationshipTypes[Math.floor(Math.random() * relationshipTypes.length)];
+                        relationships.push({
+                            from: fromChar.id,
+                            to: toChar.id,
+                            type: relationship.type,
+                            strength: 0.3 + Math.random() * 0.7,
+                            color: relationship.color
+                        });
+                    }
+                }
+            }
+
+            return relationships;
+        }
+
+        // 渲染角色图谱
+        function renderCharacterGraph(novelData) {
+            const graphContainer = document.querySelector('#character-graph');
+            
+            // 清空容器
+            graphContainer.innerHTML = `
+                <div class="graph-controls">
+                    <button id="zoom-in" class="graph-control-btn" title="放大">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+                    <button id="zoom-out" class="graph-control-btn" title="缩小">
+                        <i class="fas fa-search-minus"></i>
+                    </button>
+                    <button id="reset-view" class="graph-control-btn" title="重置视图">
+                        <i class="fas fa-home"></i>
+                    </button>
+                    <button id="fullscreen-graph" class="graph-control-btn" title="全屏查看">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                    <button id="regenerate-graph" class="graph-control-btn" title="重新生成图谱">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <div class="graph-background"></div>
+            `;
+
+            // 绘制关系线
+            novelData.relationships.forEach(relationship => {
+                const fromChar = novelData.characters.find(c => c.id === relationship.from);
+                const toChar = novelData.characters.find(c => c.id === relationship.to);
+                
+                if (fromChar && toChar) {
+                    drawRelationshipLine(fromChar, toChar, relationship);
+                }
+            });
+
+            // 绘制角色节点
+            novelData.characters.forEach(character => {
+                drawCharacterNode(character);
+            });
+
+            // 重新绑定控制按钮事件
+            document.querySelector('#zoom-in').addEventListener('click', () => zoomGraph(0.1));
+            document.querySelector('#zoom-out').addEventListener('click', () => zoomGraph(-0.1));
+            document.querySelector('#reset-view').addEventListener('click', resetGraphView);
+            document.querySelector('#fullscreen-graph').addEventListener('click', toggleFullscreen);
+            document.querySelector('#regenerate-graph').addEventListener('click', () => {
+                const params = getUrlParams();
+                const novelId = params.novel || 'doupocangqiong';
+                loadCharacterGraph(novelId);
+            });
+        }
+
+        // 绘制角色节点
+        function drawCharacterNode(character) {
+            const graphContainer = document.querySelector('#character-graph');
+            const node = document.createElement('div');
+            node.id = `character-node-${character.id}`;
+            node.className = 'character-node';
+            
+            // 根据重要性调整节点大小
+            const importance = character.importance || 0.5;
+            const size = 80 + (importance * 40); // 80-120px
+            
+            node.style.width = `${size}px`;
+            node.style.height = `${size}px`;
+            node.style.left = `${character.position.x}%`;
+            node.style.top = `${character.position.y}%`;
+            
+            // 根据重要性调整样式
+            const borderWidth = 2 + (importance * 2);
+            const shadowIntensity = 0.1 + (importance * 0.2);
+            
+            node.style.borderWidth = `${borderWidth}px`;
+            node.style.boxShadow = `0 4px 20px rgba(0, 0, 0, ${shadowIntensity})`;
+            
+            // 检查头像URL是否有效，如果无效则使用文字头像
+            const avatarUrl = character.avatar;
+            const isAvatarValid = avatarUrl && !avatarUrl.includes('undefined') && avatarUrl.startsWith('http');
+            
+            // 生成文字头像（取名字前两个字符）
+            const textAvatar = character.name.substring(0, 2);
+            const avatarColors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+            const avatarColor = avatarColors[character.name.length % avatarColors.length];
+            
+            node.innerHTML = `
+                <div class="character-avatar-container">
+                    ${isAvatarValid ? 
+                        `<img src="${avatarUrl}" alt="${character.name}头像" class="character-avatar" data-category="人物" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                         <div class="character-text-avatar" style="display: none; background: ${avatarColor};">${textAvatar}</div>` :
+                        `<div class="character-text-avatar" style="background: ${avatarColor};">${textAvatar}</div>`
+                    }
+                    <div class="importance-badge">${Math.round((character.importance || 0.5) * 100)}%</div>
+                </div>
+                <span class="character-name">${character.name}</span>
+            `;
+            
+            node.addEventListener('click', () => {
+                selectCharacter(character);
+            });
+            
+            graphContainer.appendChild(node);
+        }
+
+        // 绘制关系线
+        function drawRelationshipLine(fromChar, toChar, relationship) {
+            const graphContainer = document.querySelector('#character-graph');
+            const line = document.createElement('div');
+            line.className = 'relationship-line';
+            
+            // 计算线的位置和角度
+            const fromX = fromChar.position.x;
+            const fromY = fromChar.position.y;
+            const toX = toChar.position.x;
+            const toY = toChar.position.y;
+            
+            const length = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
+            const angle = Math.atan2(toY - fromY, toX - fromX) * 180 / Math.PI;
+            
+            line.style.left = `${fromX}%`;
+            line.style.top = `${fromY}%`;
+            line.style.width = `${length}%`;
+            line.style.transform = `rotate(${angle}deg)`;
+            
+            // 根据关系强度调整线宽和透明度
+            const strength = relationship.strength || 0.5;
+            const lineWidth = 1 + (strength * 3); // 1-4px
+            const opacity = 0.3 + (strength * 0.7); // 0.3-1.0
+            
+            line.style.height = `${lineWidth}px`;
+            line.style.opacity = opacity;
+            line.style.background = `linear-gradient(90deg, ${relationship.color} 80%, transparent)`;
+            line.style.color = relationship.color;
+            
+            // 计算标签位置，避免重叠
+            const midX = (fromX + toX) / 2;
+            const midY = (fromY + toY) / 2;
+            
+            // 根据角度调整标签偏移，避免与线重叠
+            const angleRad = angle * Math.PI / 180;
+            const offsetDistance = 15; // 标签偏移距离
+            const offsetX = Math.sin(angleRad) * offsetDistance;
+            const offsetY = -Math.cos(angleRad) * offsetDistance;
+            
+            // 添加关系标签
+            const label = document.createElement('div');
+            label.className = 'relationship-label';
+            label.textContent = relationship.type;
+            label.style.left = `${midX + offsetX}%`;
+            label.style.top = `${midY + offsetY}%`;
+            label.style.backgroundColor = relationship.color;
+            label.style.color = 'white';
+            label.style.transform = 'translate(-50%, -50%)';
+            
+            // 添加悬停效果显示完整关系信息
+            label.title = `${fromChar.name} 与 ${toChar.name} 的${relationship.type}关系 (强度: ${Math.round(strength * 100)}%)`;
+            
+            graphContainer.appendChild(line);
+            graphContainer.appendChild(label);
+        }
+
+        // 选择角色
+        function selectCharacter(character) {
+            // 清除之前的选择
+            document.querySelectorAll('.character-node').forEach(node => {
+                node.classList.remove('selected');
+            });
+            
+            // 选中当前角色
+            const node = document.querySelector(`#character-node-${character.id}`);
+            if (node) {
+                node.classList.add('selected');
+            }
+            
+            selectedCharacter = character;
+            showCharacterDetails(character);
+        }
+
+        // 显示角色详情
+        function showCharacterDetails(character) {
+            document.querySelector('#no-character-selected').style.display = 'none';
+            document.querySelector('#character-details').style.display = 'block';
+            
+            const detailsContent = document.querySelector('#character-details-content');
+            detailsContent.innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-1">
+                        <div class="text-center">
+                            <img src="${character.avatar}" alt="${character.name}头像" 
+                                 class="w-32 h-32 rounded-full mx-auto mb-4 border-4 border-gray-200" data-category="人物">
+                            <h4 class="text-2xl font-bold text-text-primary mb-2">${character.name}</h4>
+                            <div class="flex items-center justify-center space-x-4 mb-4">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
+                                    <i class="fas fa-star mr-1"></i>
+                                    重要性: ${Math.round((character.importance || 0.5) * 100)}%
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2 space-y-6">
+                        <div>
+                            <h5 class="text-lg font-semibold text-text-primary mb-3">角色描述</h5>
+                            <p class="text-text-secondary leading-relaxed">${character.description}</p>
+                        </div>
+                        <div>
+                            <h5 class="text-lg font-semibold text-text-primary mb-3">性格特点</h5>
+                            <p class="text-text-secondary">${character.personality}</p>
+                        </div>
+                        <div>
+                            <h5 class="text-lg font-semibold text-text-primary mb-3">背景介绍</h5>
+                            <p class="text-text-secondary">${character.background}</p>
+                        </div>
+                        <div>
+                            <h5 class="text-lg font-semibold text-text-primary mb-3">关键事件</h5>
+                            <ul class="space-y-2 text-text-secondary">
+                                ${character.keyEvents.map(event => `<li class="flex items-start">
+                                    <i class="fas fa-circle text-primary text-xs mt-2 mr-3"></i>
+                                    ${event}
+                                </li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 隐藏角色详情
+        function hideCharacterDetails() {
+            document.querySelector('#character-details').style.display = 'none';
+            document.querySelector('#no-character-selected').style.display = 'block';
+            
+            // 清除选择状态
+            document.querySelectorAll('.character-node').forEach(node => {
+                node.classList.remove('selected');
+            });
+            selectedCharacter = null;
+        }
+
+        // 图谱交互设置
+        function setupGraphInteraction() {
+            const graphContainer = document.querySelector('#character-graph');
+            
+            // 鼠标拖拽
+            graphContainer.addEventListener('mousedown', function(e) {
+                if (e.target.classList.contains('character-node') || e.target.closest('.character-node')) {
+                    return; // 如果点击的是角色节点，不触发拖拽
+                }
+                
+                isDragging = true;
+                dragStartX = e.clientX - currentTranslateX;
+                dragStartY = e.clientY - currentTranslateY;
+                graphContainer.style.cursor = 'grabbing';
+            });
+            
+            document.addEventListener('mousemove', function(e) {
+                if (!isDragging) return;
+                
+                currentTranslateX = e.clientX - dragStartX;
+                currentTranslateY = e.clientY - currentTranslateY;
+                
+                updateGraphTransform();
+            });
+            
+            document.addEventListener('mouseup', function() {
+                isDragging = false;
+                graphContainer.style.cursor = 'grab';
+            });
+            
+            // 鼠标滚轮缩放
+            graphContainer.addEventListener('wheel', function(e) {
+                e.preventDefault();
+                const delta = e.deltaY < 0 ? 0.1 : -0.1;
+                zoomGraph(delta);
+            });
+            
+            // 触摸支持
+            let touchStartDistance = 0;
+            let touchStartScale = 1;
+            
+            graphContainer.addEventListener('touchstart', function(e) {
+                if (e.touches.length === 2) {
+                    touchStartDistance = getTouchDistance(e.touches);
+                    touchStartScale = currentScale;
+                }
+            });
+            
+            graphContainer.addEventListener('touchmove', function(e) {
+                if (e.touches.length === 2) {
+                    e.preventDefault();
+                    const distance = getTouchDistance(e.touches);
+                    const scale = (distance / touchStartDistance) * touchStartScale;
+                    currentScale = Math.max(0.5, Math.min(3, scale));
+                    updateGraphTransform();
+                }
+            });
+        }
+
+        // 缩放图谱
+        function zoomGraph(delta) {
+            currentScale = Math.max(0.5, Math.min(3, currentScale + delta));
+            updateGraphTransform();
+        }
+
+        // 重置图谱视图
+        function resetGraphView() {
+            currentScale = 1;
+            currentTranslateX = 0;
+            currentTranslateY = 0;
+            updateGraphTransform();
+        }
+
+        // 更新图谱变换
+        function updateGraphTransform() {
+            const graphContainer = document.querySelector('#character-graph');
+            const nodes = document.querySelectorAll('.character-node, .relationship-line, .relationship-label');
+            
+            nodes.forEach(node => {
+                node.style.transform = `scale(${currentScale}) translate(${currentTranslateX / currentScale}px, ${currentTranslateY / currentScale}px)`;
+            });
+        }
+
+        // 获取触摸距离
+        function getTouchDistance(touches) {
+            const dx = touches[0].clientX - touches[1].clientX;
+            const dy = touches[0].clientY - touches[1].clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        // 全屏切换
+        function toggleFullscreen() {
+            const graphSection = document.querySelector('#character-graph-section');
+            
+            if (!document.fullscreenElement) {
+                graphSection.requestFullscreen().catch(err => {
+                    console.error('全屏请求失败:', err);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // 响应式处理
+        function handleResize() {
+            if (window.innerWidth < 1024) {
+                const sidebar = document.querySelector('#sidebar');
+                sidebar.style.transform = 'translateX(0)';
+            }
+        }
+        
+        window.addEventListener('resize', handleResize);
+        handleResize(); // 初始化
+    </script>
+
+    <!-- 版权信息 -->
+    <footer class="bg-white border-t border-border-light py-6">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col items-center space-y-4">
+                <div class="flex items-center space-x-3">
+                    <img src="logo.png" alt="小说智阅坊" class="w-8 h-8">
+                    <span class="text-sm text-text-secondary">上海大学 25121385 于承樟</span>
+                </div>
+                <p class="text-xs text-text-secondary">© 2025 小说智阅坊 - 智能阅读平台</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

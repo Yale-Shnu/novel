@@ -1,0 +1,22 @@
+{
+  "name": "xiaoshuo-zhongyuefang",
+  "version": "1.0.0",
+  "description": "小说智阅坊 - 小说阅读与智能分析平台",
+  "main": "final_volcano_server.js",
+  "scripts": {
+    "start": "node final_volcano_server.js",
+    "dev": "node final_volcano_server.js",
+    "build": "echo 'Build completed for Netlify'"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "serverless-http": "^3.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["novel", "reading", "analysis", "api"],
+  "author": "小说智阅坊",
+  "license": "MIT"
+}

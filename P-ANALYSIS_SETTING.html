@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设定集 - 小说智阅坊</title>
+    <script src="https://unpkg.byted-static.com/coze/space_ppt_lib/1.0.3-alpha.12/lib/tailwindcss.js"></script>
+    <script src="https://unpkg.byted-static.com/fortawesome/fontawesome-free/6.7.2/js/all.min.js" data-auto-replace-svg="nest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#64748b',
+                        tertiary: '#059669',
+                        success: '#10b981',
+                        danger: '#ef4444',
+                        info: '#3b82f6',
+                        'text-primary': '#1e293b',
+                        'text-secondary': '#64748b',
+                        'bg-light': '#f8fafc',
+                        'border-light': '#e2e8f0'
+                    },
+                    boxShadow: {
+                        'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+                        'card-hover': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .sidebar-collapsed {
+            width: 56px;
+        }
+        
+        .sidebar-expanded {
+            width: 240px;
+        }
+        
+        .main-content-expanded {
+            margin-left: 240px;
+        }
+        
+        .main-content-collapsed {
+            margin-left: 56px;
+        }
+        
+        .card-hover:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transform: translateY(-1px);
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .nav-item-active {
+            background-color: #dbeafe;
+            color: #2563eb;
+            border-right: 3px solid #2563eb;
+        }
+        
+        .nav-item:hover {
+            background-color: #f1f5f9;
+            color: #2563eb;
+        }
+        
+        .search-focus:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .setting-category-active {
+            background-color: #dbeafe;
+            color: #2563eb;
+            border-right: 3px solid #2563eb;
+        }
+        
+        .setting-item:hover {
+            background-color: #f8fafc;
+        }
+        
+        .setting-detail {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+        }
+        
+        .setting-detail.expanded {
+            max-height: 500px;
+        }
+    </style>
+</head>
+<body class="bg-bg-light min-h-screen">
+    <!-- 顶部导航栏 -->
+    <header id="top-navbar" class="fixed top-0 left-0 right-0 bg-white border-b border-border-light h-16 z-50">
+        <div class="flex items-center justify-between h-full px-6">
+            <!-- 左侧：Logo和菜单切换 -->
+            <div class="flex items-center space-x-4">
+                <button id="sidebar-toggle" class="p-2 rounded-lg hover:bg-gray-100 lg:hidden">
+                    <i class="fas fa-bars text-gray-600"></i>
+                </button>
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                        <i class="fas fa-book-open text-white text-sm"></i>
+                    </div>
+                    <h1 class="text-xl font-bold text-text-primary">小说智阅坊</h1>
+                </div>
+            </div>
+            
+            <!-- 中间：小说标题和返回 -->
+            <div class="flex items-center space-x-4">
+                <button id="back-to-shelf" class="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                    <i class="fas fa-arrow-left text-gray-600"></i>
+                    <span class="text-gray-700">返回书架</span>
+                </button>
+                <div class="text-center">
+                    <h2 id="novel-title" class="text-lg font-semibold text-text-primary">斗破苍穹</h2>
+                    <p class="text-sm text-text-secondary">设定集</p>
+                </div>
+            </div>
+            
+            <!-- 右侧：搜索、用户 -->
+            <div class="flex items-center space-x-4">
+                <div class="relative hidden sm:block">
+                    <input type="text" id="global-search" placeholder="搜索小说..." 
+                           class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg search-focus">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+                <button id="user-menu" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100">
+                    <img src="https://s.coze.cn/image/zGHRTi-yMzA/" 
+                         alt="用户头像" class="w-8 h-8 rounded-full" data-category="人物">
+                    <span class="hidden md:block text-text-primary">读者</span>
+                    <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 左侧菜单 -->
+    <aside id="sidebar" class="fixed left-0 top-16 bottom-0 bg-white border-r border-border-light sidebar-expanded z-40 transition-all duration-300">
+        <nav class="p-4 space-y-2">
+            <a href="P-HOME.html" id="nav-home" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-home w-5"></i>
+                <span class="sidebar-text">首页</span>
+            </a>
+            <a href="P-SHELF.html" id="nav-shelf" class="nav-item nav-item-active flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium">
+                <i class="fas fa-bookmark w-5"></i>
+                <span class="sidebar-text">我的书架</span>
+            </a>
+            <a href="P-RECOMMEND.html" id="nav-recommend" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-star w-5"></i>
+                <span class="sidebar-text">为你推荐</span>
+            </a>
+            <a href="P-USER_CENTER.html" id="nav-user" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-user w-5"></i>
+                <span class="sidebar-text">用户中心</span>
+            </a>
+            <a href="P-HELP.html" id="nav-help" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-question-circle w-5"></i>
+                <span class="sidebar-text">帮助中心</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main id="main-content" class="main-content-expanded pt-16 min-h-screen transition-all duration-300">
+        <div class="p-6 max-w-7xl mx-auto">
+            <!-- 页面头部 -->
+            <div id="page-header" class="mb-8">
+                <nav id="breadcrumb" class="text-sm text-text-secondary mb-4">
+                    <a href="P-HOME.html" class="hover:text-primary">首页</a>
+                    <span class="mx-2">></span>
+                    <a href="P-SHELF.html" class="hover:text-primary">我的书架</a>
+                    <span class="mx-2">></span>
+                    <span id="breadcrumb-novel-title" class="text-text-primary">斗破苍穹</span>
+                    <span class="mx-2">></span>
+                    <span class="text-text-primary">设定集</span>
+                </nav>
+                <h2 class="text-2xl font-bold text-text-primary">设定集</h2>
+                <p class="text-text-secondary mt-2">深入了解小说的世界观、规则和术语设定</p>
+            </div>
+
+            <!-- 设定分类导航和内容区 -->
+            <div class="flex flex-col lg:flex-row gap-6">
+                <!-- 左侧分类导航 -->
+                <div id="setting-categories" class="lg:w-64 space-y-2">
+                    <button id="category-worldview" class="setting-category setting-category-active w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-left transition-colors">
+                        <i class="fas fa-globe w-5"></i>
+                        <span>世界观</span>
+                    </button>
+                    <button id="category-rules" class="setting-category w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-left text-text-secondary hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-cogs w-5"></i>
+                        <span>规则</span>
+                    </button>
+                    <button id="category-terms" class="setting-category w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-left text-text-secondary hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-book w-5"></i>
+                        <span>术语</span>
+                    </button>
+                </div>
+
+                <!-- 右侧设定内容区 -->
+                <div id="setting-content" class="flex-1">
+                    <!-- 世界观设定 -->
+                    <div id="worldview-content" class="setting-content">
+                        <div class="bg-white rounded-xl shadow-card p-6">
+                            <h3 class="text-lg font-semibold text-text-primary mb-4">世界观设定</h3>
+                            <div class="space-y-4">
+                                <div class="setting-item p-4 rounded-lg border border-border-light cursor-pointer" data-setting-id="world-map">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-map text-primary"></i>
+                                            <div>
+                                                <h4 class="font-medium text-text-primary">斗气大陆</h4>
+                                                <p class="text-sm text-text-secondary">小说主要发生的世界</p>
+                                            </div>
+                                        </div>
+                                        <i class="fas fa-chevron-down text-gray-400 transform transition-transform"></i>
+                                    </div>
+                                    <div class="setting-detail mt-3 ml-8">
+                                        <p class="text-sm text-text-secondary leading-relaxed">
+                                            斗气大陆是一个以修炼斗气为核心的世界，大陆上分布着多个帝国和宗门。这里的人们通过修炼斗气来提升实力，斗气的等级从斗之气到斗帝分为多个层次。大陆上存在着各种奇异的魔兽、神秘的古族和强大的斗技。
+                                        </p>
+                                        <div class="mt-3 grid grid-cols-2 gap-4 text-xs">
+                                            <div>
+                                                <span class="font-medium text-text-primary">主要势力：</span>
+                                                <span class="text-text-secondary">加玛帝国、云岚宗、萧家等</span>
+                                            </div>
+                                            <div>
+                                                <span class="font-medium text-text-primary">特殊区域：</span>
+                                                <span class="text-text-secondary">魔兽山脉、中州、古帝洞府</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="setting-item p-4 rounded-lg border border-border-light cursor-pointer" data-setting-id="time-line">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-clock text-info"></i>
+                                            <div>
+                                                <h4 class="font-medium text-text-primary">时间线</h4>
+                                                <p class="text-sm text-text-secondary">小说故事的时间脉络</p>
+                                            </div>
+                                        </div>
+                                        <i class="fas fa-chevron-down text-gray-400 transform transition-transform"></i>
+                                    </div>
+                                    <div class="setting-detail mt-3 ml-8">
+                                        <p class="text-sm text-text-secondary leading-relaxed">
+                                            故事开始于萧炎被退婚的那一天，随后经历了三年之约、迦南学院、中州历练等重要阶段。整个故事跨度约十年，从萧炎少年时期一直到他成为斗帝的传奇历程。
+                                        </p>
+                                        <div class="mt-3 space-y-2 text-xs">
+                                            <div><span class="font-medium text-text-primary">重要时间节点：</span></div>
+                                            <div>• 萧炎被退婚，开始修炼焚诀</div>
+                                            <div>• 三年之约，击败纳兰嫣然</div>
+                                            <div>• 迦南学院学习，收服异火</div>
+                                            <div>• 中州历练，建立炎盟</div>
+                                            <div>• 最终突破斗帝，拯救大陆</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="setting-item p-4 rounded-lg border border-border-light cursor-pointer" data-setting-id="geography">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-mountain text-tertiary"></i>
+                                            <div>
+                                                <h4 class="font-medium text-text-primary">地理环境</h4>
+                                                <p class="text-sm text-text-secondary">斗气大陆的地理特征</p>
+                                            </div>
+                                        </div>
+                                        <i class="fas fa-chevron-down text-gray-400 transform transition-transform"></i>
+                                    </div>
+                                    <div class="setting-detail mt-3 ml-8">
+                                        <p class="text-sm text-text-secondary leading-relaxed">
+                                            斗气大陆地形复杂多样，包括广袤的平原、险峻的山脉、神秘的森林和危险的沼泽。其中魔兽山脉是最著名的险地之一，生活着各种强大的魔兽。中州作为大陆中心，聚集了最强大的势力和最丰富的资源。
+                                        </p>
+                                        <div class="mt-3 grid grid-cols-2 gap-4 text-xs">
+                                            <div>
+                                                <span class="font-medium text-text-primary">著名地点：</span>
+                                                <span class="text-text-secondary">乌坦城、青山镇、迦南学院</span>
+                                            </div>
+                                            <div>
+                                                <span class="font-medium text-text-primary">危险区域：</span>
+                                                <span class="text-text-secondary">魔兽山脉、天焚炼气塔</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 规则设定 -->
+                    <div id="rules-content" class="setting-content hidden">
+                        <div class="bg-white rounded-xl shadow-card p-6">
+                            <h3 class="text-lg font-semibold text-text-primary mb-4">规则设定</h3>
+                            <div class="space-y-4">
+                                <div class="setting-item p-4 rounded-lg border border-border-light cursor-pointer" data-setting-id="cultivation-system">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-fire text-danger"></i>
+                                            <div>
+                                                <h4 class="font-medium text-text-primary">斗气修炼体系</h4>
+                                                <p class="text-sm text-text-secondary">斗气大陆的核心修炼规则</p>
+                                            </div>
+                                        </div>
+                                        <i class="fas fa-chevron-down text-gray-400 transform transition-transform"></i>
+                                    </div>
+                                    <div class="setting-detail mt-3 ml-8">
+                                        <p class="text-sm text-text-secondary leading-relaxed">
+                                            斗气修炼是斗气大陆的核心体系，从最低的斗之气到最高的斗帝都有严格的等级划分。每个等级都有其独特的标志和能力，修炼速度和天赋决定了一个人的成就上限。
+                                        </p>
+                                        <div class="mt-3 space-y-2 text-xs">
+                                            <div><span class="font-medium text-text-primary">等级划分：</span></div>
+                                            <div>• 斗之气：一至九段，基础修炼阶段</div>
+                                            <div>• 斗者：一星至九星，正式踏入斗气修炼</div>
+                                            <div>• 斗师：一星至九星，掌握斗技的基础</div>
+                                            <div>• 大斗师：一星至九星，实力显著提升</div>
+                                            <div>• 斗灵、斗王、斗皇、斗宗、斗尊、斗圣、斗帝</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="setting-item p-4 rounded-lg border border-border-light cursor-pointer" data-setting-id="douqi-types">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-flask text-success"></i>
+                                            <div>
+                                                <h4 class="font-medium text-text-primary">斗气属性</h4>
+                                                <p class="text-sm text-text-secondary">不同属性的斗气特性</p>
+                                            </div>
+                                        </div>
+                                        <i class="fas fa-chevron-down text-gray-400 transform transition-transform"></i>
+                                    </div>
+                                    <div class="setting-detail mt-3 ml-8">
+                                        <p class="text-sm text-text-secondary leading-relaxed">
+                                            斗气具有多种属性，每种属性都有其独特的特点和优势。修炼者通常会根据自身天赋选择适合的属性进行修炼，也有少数天才能够掌握多种属性。
+                                        </p>
+                                        <div class="mt-3 grid grid-cols-2 gap-4 text-xs">
+                                            <div>
+                                                <span class="font-medium text-text-primary">常见属性：</span>
+                                                <span class="text-text-secondary">火、水、风、雷、土</span>
+                                            </div>
+                                            <div>
+                                                <span class="font-medium text-text-primary">特殊属性：</span>
+                                                <span class="text-text-secondary">空间、时间、灵魂</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="setting-item p-4 rounded-lg border border-border-light cursor-pointer" data-setting-id="douji-system">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-sword text-primary"></i>
+                                            <div>
+                                                <h4 class="font-medium text-text-primary">斗技体系</h4>
+                                                <p class="text-sm text-text-secondary">斗气大陆的战斗技能</p>
+                                            </div>
+                                        </div>
+                                        <i class="fas fa-chevron-down text-gray-400 transform transition-transform"></i>
+                                    </div>
+                                    <div class="setting-detail mt-3 ml-8">
+                                        <p class="text-sm text-text-secondary leading-relaxed">
+                                            斗技是斗气大陆的战斗技能，分为不同的等级和类型。强大的斗技能够极大地提升战斗力，是修炼者争夺的重要资源。
+                                        </p>
+                                        <div class="mt-3 space-y-2 text-xs">
+                                            <div><span class="font-medium text-text-primary">斗技等级：</span></div>
+                                            <div>• 天、地、玄、黄四个等级</div>
+                                            <div>• 每个等级又分为低、中、高三个品阶</div>
+                                            <div>• 天阶斗技最为稀有和强大</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 术语设定 -->
+                    <div id="terms-content" class="setting-content hidden">
+                        <div class="bg-white rounded-xl shadow-card p-6">
+                            <h3 class="text-lg font-semibold text-text-primary mb-4">术语设定</h3>
+                            <div class="space-y-4">
+                                <div class="setting-item p-4 rounded-lg border border-border-light cursor-pointer" data-setting-id="special-items">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-gem text-purple-500"></i>
+                                            <div>
+                                                <h4 class="font-medium text-text-primary">特殊物品</h4>
+                                                <p class="text-sm text-text-secondary">斗气大陆的珍稀物品</p>
+                                            </div>
+                                        </div>
+                                        <i class="fas fa-chevron-down text-gray-400 transform transition-transform"></i>
+                                    </div>
+                                    <div class="setting-detail mt-3 ml-8">
+                                        <p class="text-sm text-text-secondary leading-relaxed">
+                                            斗气大陆上存在着许多具有特殊能力的珍稀物品，这些物品往往是修炼者梦寐以求的宝物。
+                                        </p>
+                                        <div class="mt-3 space-y-2 text-xs">
+                                            <div><span class="font-medium text-text-primary">异火：</span>天地间最强大的火焰，共有二十三种，每种都有独特的能力</div>
+                                            <div><span class="font-medium text-text-primary">丹药：</span>通过炼药师炼制的特殊药剂，能够提升实力、治疗伤势</div>
+                                            <div><span class="font-medium text-text-primary">斗技卷轴：</span>记录斗技的特殊卷轴，是传承斗技的重要方式</div>
+                                            <div><span class="font-medium text-text-primary">天焚炼气塔：</span>迦南学院的修炼圣地，内部有强大的异火能量</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="setting-item p-4 rounded-lg border border-border-light cursor-pointer" data-setting-id="organizations">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-shield-alt text-blue-500"></i>
+                                            <div>
+                                                <h4 class="font-medium text-text-primary">势力组织</h4>
+                                                <p class="text-sm text-text-secondary">斗气大陆的主要势力</p>
+                                            </div>
+                                        </div>
+                                        <i class="fas fa-chevron-down text-gray-400 transform transition-transform"></i>
+                                    </div>
+                                    <div class="setting-detail mt-3 ml-8">
+                                        <p class="text-sm text-text-secondary leading-relaxed">
+                                            斗气大陆上存在着各种强大的势力组织，包括帝国、宗门、家族等，它们之间既有合作也有竞争。
+                                        </p>
+                                        <div class="mt-3 space-y-2 text-xs">
+                                            <div><span class="font-medium text-text-primary">加玛帝国：</span>萧炎的故乡，位于斗气大陆的西北区域</div>
+                                            <div><span class="font-medium text-text-primary">云岚宗：</span>加玛帝国最强大的宗门之一，与萧炎有深厚恩怨</div>
+                                            <div><span class="font-medium text-text-primary">萧家：</span>萧炎的家族，曾经的炼药师世家</div>
+                                            <div><span class="font-medium text-text-primary">古族：</span>大陆上最古老的家族，拥有强大的血脉传承</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="setting-item p-4 rounded-lg border border-border-light cursor-pointer" data-setting-id="professions">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-hat-wizard text-yellow-500"></i>
+                                            <div>
+                                                <h4 class="font-medium text-text-primary">特殊职业</h4>
+                                                <p class="text-sm text-text-secondary">斗气大陆的特殊职业</p>
+                                            </div>
+                                        </div>
+                                        <i class="fas fa-chevron-down text-gray-400 transform transition-transform"></i>
+                                    </div>
+                                    <div class="setting-detail mt-3 ml-8">
+                                        <p class="text-sm text-text-secondary leading-relaxed">
+                                            除了普通的修炼者，斗气大陆上还有一些特殊的职业，这些职业往往具有独特的能力和地位。
+                                        </p>
+                                        <div class="mt-3 space-y-2 text-xs">
+                                            <div><span class="font-medium text-text-primary">炼药师：</span>能够炼制丹药的特殊职业，地位崇高</div>
+                                            <div><span class="font-medium text-text-primary">阵法师：</span>能够布置强大阵法的职业，极为稀有</div>
+                                            <div><span class="font-medium text-text-primary">丹塔长老：</span>丹塔的最高权力者，都是顶尖的炼药师</div>
+                                            <div><span class="font-medium text-text-primary">斗帝：</span>斗气大陆的最高境界，拥有毁天灭地的力量</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 引入API配置 -->
+    <script src="api-config.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 解析URL参数的辅助函数
+            function getUrlParams() {
+                const params = {};
+                const queryString = window.location.search.substring(1);
+                const urlParams = new URLSearchParams(queryString);
+                
+                for(const [key, value] of urlParams.entries()) {
+                    params[key] = value;
+                }
+                return params;
+            }
+
+            // 获取URL参数
+            const params = getUrlParams();
+            
+            // 根据参数更新页面内容
+            if(params.novel) {
+                loadNovelSetting(params.novel);
+            }
+
+            // 加载小说设定数据的函数
+            async function loadNovelSetting(novelId) {
+                const mockNovels = {
+                    "doupocangqiong": { 
+                        title: "斗破苍穹", 
+                        author: "天蚕土豆",
+                        content: "斗破苍穹讲述的是天才少年萧炎在创造了家族空前绝后的修炼纪录后突然成了废人，种种打击接踵而至。就在他即将绝望的时候，一缕灵魂从他手上的戒指里浮现，一扇全新的大门在面前开启，经过艰苦修炼最终成就辉煌的故事。"
+                    },
+                    "wanmeishijie": { 
+                        title: "完美世界", 
+                        author: "辰东",
+                        content: "完美世界讲述的是石昊从大荒中走出，一路成长，最终成为独断万古的荒天帝的故事。他经历了无数的磨难和挑战，最终站在了世界的巅峰。"
+                    },
+                    "zhetian": { 
+                        title: "遮天", 
+                        author: "辰东",
+                        content: "遮天讲述的是叶凡因缘际会来到北斗星域，从此踏上修仙之路，历经磨难，最终成为天帝的故事。他见证了无数强者的崛起与陨落，最终站在了宇宙的巅峰。"
+                    }
+                };
+                
+                const novel = mockNovels[novelId] || { 
+                    title: "未知小说", 
+                    author: "未知作者",
+                    content: "这是一个小说示例内容。"
+                };
+                
+                // 更新页面UI
+                document.querySelector('#novel-title').textContent = novel.title;
+                document.querySelector('#breadcrumb-novel-title').textContent = novel.title;
+                document.title = `设定集 - ${novel.title} - 小说智阅坊`;
+                
+                // 调用API生成设定分析
+                try {
+                    const settingAnalysis = await APIService.generateSettingAnalysis(novel.title, novel.content);
+                    // 可以在这里解析AI返回的设定分析结果，更新页面内容
+                    console.log('设定分析结果:', settingAnalysis);
+                } catch (error) {
+                    console.error('生成设定分析失败:', error);
+                }
+            }
+
+            // 侧边栏切换功能
+            const sidebarToggle = document.querySelector('#sidebar-toggle');
+            const sidebar = document.querySelector('#sidebar');
+            const mainContent = document.querySelector('#main-content');
+            const sidebarTexts = document.querySelectorAll('.sidebar-text');
+            
+            let sidebarCollapsed = false;
+            
+            sidebarToggle.addEventListener('click', () => {
+                sidebarCollapsed = !sidebarCollapsed;
+                
+                if (sidebarCollapsed) {
+                    sidebar.classList.remove('sidebar-expanded');
+                    sidebar.classList.add('sidebar-collapsed');
+                    mainContent.classList.remove('main-content-expanded');
+                    mainContent.classList.add('main-content-collapsed');
+                    sidebarTexts.forEach(text => text.style.display = 'none');
+                } else {
+                    sidebar.classList.remove('sidebar-collapsed');
+                    sidebar.classList.add('sidebar-expanded');
+                    mainContent.classList.remove('main-content-collapsed');
+                    mainContent.classList.add('main-content-expanded');
+                    sidebarTexts.forEach(text => text.style.display = 'block');
+                }
+            });
+
+            // 返回书架按钮
+            document.querySelector('#back-to-shelf').addEventListener('click', function() {
+                window.location.href = 'P-SHELF.html';
+            });
+
+            // 设定分类切换
+            const categories = document.querySelectorAll('.setting-category');
+            const contents = document.querySelectorAll('.setting-content');
+            
+            categories.forEach(category => {
+                category.addEventListener('click', function() {
+                    // 移除所有分类的激活状态
+                    categories.forEach(cat => {
+                        cat.classList.remove('setting-category-active');
+                        cat.classList.add('text-text-secondary');
+                    });
+                    
+                    // 隐藏所有内容
+                    contents.forEach(content => {
+                        content.classList.add('hidden');
+                    });
+                    
+                    // 激活当前分类
+                    this.classList.add('setting-category-active');
+                    this.classList.remove('text-text-secondary');
+                    
+                    // 显示对应内容
+                    const categoryId = this.id.replace('category-', '');
+                    const targetContent = document.querySelector(`#${categoryId}-content`);
+                    if (targetContent) {
+                        targetContent.classList.remove('hidden');
+                    }
+                });
+            });
+
+            // 设定项展开/折叠功能
+            const settingItems = document.querySelectorAll('.setting-item');
+            
+            settingItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const detail = this.querySelector('.setting-detail');
+                    const chevron = this.querySelector('.fa-chevron-down');
+                    
+                    if (detail.classList.contains('expanded')) {
+                        detail.classList.remove('expanded');
+                        chevron.style.transform = 'rotate(0deg)';
+                    } else {
+                        detail.classList.add('expanded');
+                        chevron.style.transform = 'rotate(180deg)';
+                    }
+                });
+            });
+
+            // 搜索功能
+            document.querySelector('#global-search').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const keyword = e.target.value.trim();
+                    if (keyword) {
+                        window.location.href = `P-SEARCH_RESULT.html?q=${encodeURIComponent(keyword)}`;
+                    }
+                }
+            });
+
+            // 导航菜单点击事件
+            document.querySelector('#nav-home').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = 'P-HOME.html';
+            });
+
+            document.querySelector('#nav-shelf').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = 'P-SHELF.html';
+            });
+
+            document.querySelector('#nav-recommend').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = 'P-RECOMMEND.html';
+            });
+
+            document.querySelector('#nav-user').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = 'P-USER_CENTER.html';
+            });
+
+            document.querySelector('#nav-help').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = 'P-HELP.html';
+            });
+
+            // 面包屑导航
+            document.querySelector('#breadcrumb a[href="P-HOME.html"]').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = 'P-HOME.html';
+            });
+
+            document.querySelector('#breadcrumb a[href="P-SHELF.html"]').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = 'P-SHELF.html';
+            });
+
+            // 响应式处理
+            function handleResize() {
+                if (window.innerWidth < 1024) {
+                    sidebar.style.transform = sidebarCollapsed ? 'translateX(0)' : 'translateX(0)';
+                } else {
+                    sidebar.style.transform = 'translateX(0)';
+                }
+            }
+            
+            window.addEventListener('resize', handleResize);
+            handleResize(); // 初始化
+        });
+    </script>
+
+    <!-- 版权信息 -->
+    <footer class="bg-white border-t border-border-light py-6">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col items-center space-y-4">
+                <div class="flex items-center space-x-3">
+                    <img src="logo.png" alt="小说智阅坊" class="w-8 h-8">
+                    <span class="text-sm text-text-secondary">上海大学 25121385 于承樟</span>
+                </div>
+                <p class="text-xs text-text-secondary">© 2024 小说智阅坊 - 智能阅读平台</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户中心 - 小说智阅坊</title>
+    <script src="https://unpkg.byted-static.com/coze/space_ppt_lib/1.0.3-alpha.12/lib/tailwindcss.js"></script>
+    <script src="https://unpkg.byted-static.com/fortawesome/fontawesome-free/6.7.2/js/all.min.js" data-auto-replace-svg="nest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#64748b',
+                        tertiary: '#059669',
+                        success: '#10b981',
+                        danger: '#ef4444',
+                        info: '#3b82f6',
+                        'text-primary': '#1e293b',
+                        'text-secondary': '#64748b',
+                        'bg-light': '#f8fafc',
+                        'border-light': '#e2e8f0'
+                    },
+                    boxShadow: {
+                        'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+                        'card-hover': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .sidebar-collapsed {
+            width: 56px;
+        }
+        
+        .sidebar-expanded {
+            width: 240px;
+        }
+        
+        .main-content-expanded {
+            margin-left: 240px;
+        }
+        
+        .main-content-collapsed {
+            margin-left: 56px;
+        }
+        
+        .nav-item-active {
+            background-color: #dbeafe;
+            color: #2563eb;
+            border-right: 3px solid #2563eb;
+        }
+        
+        .nav-item:hover {
+            background-color: #f1f5f9;
+            color: #2563eb;
+        }
+        
+        .search-focus:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .submenu-item-active {
+            background-color: #f1f5f9;
+            color: #2563eb;
+            border-right: 3px solid #2563eb;
+        }
+        
+        .submenu-item:hover {
+            background-color: #f8fafc;
+            color: #2563eb;
+        }
+        
+        .form-input-focus:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .setting-section {
+            display: none;
+        }
+        
+        .setting-section.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-bg-light min-h-screen">
+    <!-- 顶部导航栏 -->
+    <header id="top-navbar" class="fixed top-0 left-0 right-0 bg-white border-b border-border-light h-16 z-50">
+        <div class="flex items-center justify-between h-full px-6">
+            <!-- 左侧：Logo和菜单切换 -->
+            <div class="flex items-center space-x-4">
+                <button id="sidebar-toggle" class="p-2 rounded-lg hover:bg-gray-100 lg:hidden">
+                    <i class="fas fa-bars text-gray-600"></i>
+                </button>
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                        <i class="fas fa-book-open text-white text-sm"></i>
+                    </div>
+                    <h1 class="text-xl font-bold text-text-primary">小说智阅坊</h1>
+                </div>
+            </div>
+            
+            <!-- 中间：主导航 -->
+            <nav id="main-nav" class="hidden md:flex items-center space-x-8">
+                <a href="P-HOME.html" class="text-text-secondary hover:text-primary py-1">首页</a>
+                <a href="P-SHELF.html" class="text-text-secondary hover:text-primary py-1">书架</a>
+                <a href="P-RECOMMEND.html" class="text-text-secondary hover:text-primary py-1">推荐</a>
+            </nav>
+            
+            <!-- 右侧：搜索、用户 -->
+            <div class="flex items-center space-x-4">
+                <div class="relative hidden sm:block">
+                    <input type="text" id="global-search" placeholder="搜索小说..." 
+                           class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg search-focus">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+                <button id="user-menu" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100">
+                    <img src="https://s.coze.cn/image/PGNBn7wyDZc/" 
+                         alt="用户头像" class="w-8 h-8 rounded-full" data-category="人物">
+                    <span class="hidden md:block text-text-primary">读者</span>
+                    <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 左侧菜单 -->
+    <aside id="sidebar" class="fixed left-0 top-16 bottom-0 bg-white border-r border-border-light sidebar-expanded z-40 transition-all duration-300">
+        <nav class="p-4 space-y-2">
+            <a href="P-HOME.html" id="nav-home" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-home w-5"></i>
+                <span class="sidebar-text">首页</span>
+            </a>
+            <a href="P-SHELF.html" id="nav-shelf" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-bookmark w-5"></i>
+                <span class="sidebar-text">我的书架</span>
+            </a>
+            <a href="P-RECOMMEND.html" id="nav-recommend" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-star w-5"></i>
+                <span class="sidebar-text">为你推荐</span>
+            </a>
+            <a href="P-USER_CENTER.html" id="nav-user" class="nav-item nav-item-active flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium">
+                <i class="fas fa-user w-5"></i>
+                <span class="sidebar-text">用户中心</span>
+            </a>
+            <a href="P-HELP.html" id="nav-help" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+                <i class="fas fa-question-circle w-5"></i>
+                <span class="sidebar-text">帮助中心</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main id="main-content" class="main-content-expanded pt-16 min-h-screen transition-all duration-300">
+        <div class="p-6 max-w-7xl mx-auto">
+            <!-- 页面头部 -->
+            <div id="page-header" class="mb-8">
+                <nav id="breadcrumb" class="text-sm text-text-secondary mb-4">
+                    <span>首页</span>
+                    <i class="fas fa-chevron-right mx-2"></i>
+                    <span class="text-primary">用户中心</span>
+                </nav>
+                <h2 class="text-2xl font-bold text-text-primary">用户中心</h2>
+                <p class="text-text-secondary mt-2">管理个人信息和阅读偏好设置</p>
+            </div>
+
+            <!-- 用户中心内容区 -->
+            <div class="flex gap-6">
+                <!-- 左侧二级菜单 -->
+                <aside id="submenu" class="w-48 flex-shrink-0">
+                    <div class="bg-white rounded-xl shadow-card p-6">
+                        <nav class="space-y-2">
+                            <button id="submenu-profile" class="submenu-item submenu-item-active w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-left">
+                                <i class="fas fa-user-circle w-5"></i>
+                                <span>基本资料</span>
+                            </button>
+                            <button id="submenu-security" class="submenu-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-left text-text-secondary">
+                                <i class="fas fa-shield-alt w-5"></i>
+                                <span>账号安全</span>
+                            </button>
+                            <button id="submenu-preferences" class="submenu-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-left text-text-secondary">
+                                <i class="fas fa-cog w-5"></i>
+                                <span>阅读偏好</span>
+                            </button>
+                            <button id="submenu-sync" class="submenu-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-left text-text-secondary">
+                                <i class="fas fa-sync-alt w-5"></i>
+                                <span>数据同步</span>
+                            </button>
+                        </nav>
+                    </div>
+                </aside>
+
+                <!-- 右侧设置内容区 -->
+                <div id="settings-content" class="flex-1">
+                    <!-- 基本资料设置 -->
+                    <div id="profile-section" class="setting-section active">
+                        <div class="bg-white rounded-xl shadow-card p-6">
+                            <h3 class="text-lg font-semibold text-text-primary mb-6">基本资料</h3>
+                            <form id="profile-form" class="space-y-6">
+                                <div class="flex items-center space-x-6">
+                                    <div class="flex-shrink-0">
+                                        <img id="avatar-preview" src="https://s.coze.cn/image/rjjEYjrllws/" 
+                                             alt="用户头像" class="w-20 h-20 rounded-full object-cover" data-category="人物">
+                                        <button type="button" id="avatar-upload" class="mt-2 text-sm text-primary hover:text-blue-700">
+                                            <i class="fas fa-camera mr-1"></i>更换头像
+                                        </button>
+                                        <input type="file" id="avatar-file" accept="image/*" class="hidden">
+                                    </div>
+                                    <div class="flex-1 space-y-4">
+                                        <div>
+                                            <label for="nickname" class="block text-sm font-medium text-text-primary mb-2">昵称</label>
+                                            <input type="text" id="nickname" name="nickname" value="读者" 
+                                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg form-input-focus">
+                                        </div>
+                                        <div>
+                                            <label for="gender" class="block text-sm font-medium text-text-primary mb-2">性别</label>
+                                            <select id="gender" name="gender" class="w-full px-4 py-2 border border-gray-300 rounded-lg form-input-focus">
+                                                <option value="male">男</option>
+                                                <option value="female">女</option>
+                                                <option value="other">其他</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label for="birthday" class="block text-sm font-medium text-text-primary mb-2">生日</label>
+                                            <input type="date" id="birthday" name="birthday" value="1990-01-01" 
+                                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg form-input-focus">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label for="bio" class="block text-sm font-medium text-text-primary mb-2">个人简介</label>
+                                    <textarea id="bio" name="bio" rows="4" 
+                                              class="w-full px-4 py-2 border border-gray-300 rounded-lg form-input-focus resize-none"
+                                              placeholder="简单介绍一下自己...">热爱阅读的小说爱好者，喜欢探索各种精彩的故事世界。</textarea>
+                                </div>
+                                <div class="flex justify-end space-x-4 pt-4">
+                                    <button type="button" id="profile-cancel" class="px-6 py-2 text-text-secondary border border-gray-300 rounded-lg hover:bg-gray-50">
+                                        取消
+                                    </button>
+                                    <button type="submit" id="profile-save" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-blue-700">
+                                        保存
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- 账号安全设置 -->
+                    <div id="security-section" class="setting-section">
+                        <div class="bg-white rounded-xl shadow-card p-6">
+                            <h3 class="text-lg font-semibold text-text-primary mb-6">账号安全</h3>
+                            <form id="security-form" class="space-y-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-text-primary mb-2">手机号</label>
+                                        <div class="flex items-center space-x-3">
+                                            <span id="phone-display" class="text-text-secondary">138****8888</span>
+                                            <button type="button" id="phone-change" class="text-sm text-primary hover:text-blue-700">更换</button>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-text-primary mb-2">邮箱</label>
+                                        <div class="flex items-center space-x-3">
+                                            <span id="email-display" class="text-text-secondary">user@example.com</span>
+                                            <button type="button" id="email-change" class="text-sm text-primary hover:text-blue-700">更换</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="border-t border-border-light pt-6">
+                                    <h4 class="text-sm font-medium text-text-primary mb-4">修改密码</h4>
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label for="old-password" class="block text-sm font-medium text-text-primary mb-2">当前密码</label>
+                                            <input type="password" id="old-password" name="old-password" 
+                                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg form-input-focus">
+                                        </div>
+                                        <div>
+                                            <label for="new-password" class="block text-sm font-medium text-text-primary mb-2">新密码</label>
+                                            <input type="password" id="new-password" name="new-password" 
+                                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg form-input-focus">
+                                        </div>
+                                        <div>
+                                            <label for="confirm-password" class="block text-sm font-medium text-text-primary mb-2">确认新密码</label>
+                                            <input type="password" id="confirm-password" name="confirm-password" 
+                                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg form-input-focus">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="border-t border-border-light pt-6">
+                                    <h4 class="text-sm font-medium text-text-primary mb-4">第三方账号</h4>
+                                    <div class="space-y-3">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center space-x-3">
+                                                <i class="fab fa-weixin text-green-500 text-xl"></i>
+                                                <span class="text-text-primary">微信</span>
+                                            </div>
+                                            <span class="text-success text-sm">已绑定</span>
+                                        </div>
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center space-x-3">
+                                                <i class="fab fa-qq text-blue-500 text-xl"></i>
+                                                <span class="text-text-primary">QQ</span>
+                                            </div>
+                                            <button type="button" class="text-primary text-sm hover:text-blue-700">绑定</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex justify-end space-x-4 pt-4">
+                                    <button type="button" id="security-cancel" class="px-6 py-2 text-text-secondary border border-gray-300 rounded-lg hover:bg-gray-50">
+                                        取消
+                                    </button>
+                                    <button type="submit" id="security-save" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-blue-700">
+                                        保存
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- 阅读偏好设置 -->
+                    <div id="preferences-section" class="setting-section">
+                        <div class="bg-white rounded-xl shadow-card p-6">
+                            <h3 class="text-lg font-semibold text-text-primary mb-6">阅读偏好</h3>
+                            <form id="preferences-form" class="space-y-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label for="font-family" class="block text-sm font-medium text-text-primary mb-2">字体</label>
+                                        <select id="font-family" name="font-family" class="w-full px-4 py-2 border border-gray-300 rounded-lg form-input-focus">
+                                            <option value="serif">宋体</option>
+                                            <option value="sans-serif">黑体</option>
+                                            <option value="kai">楷体</option>
+                                            <option value="microsoftyahei" selected>微软雅黑</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="font-size" class="block text-sm font-medium text-text-primary mb-2">字号</label>
+                                        <select id="font-size" name="font-size" class="w-full px-4 py-2 border border-gray-300 rounded-lg form-input-focus">
+                                            <option value="small">小</option>
+                                            <option value="medium" selected>中</option>
+                                            <option value="large">大</option>
+                                            <option value="xlarge">特大</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label for="line-height" class="block text-sm font-medium text-text-primary mb-2">行间距</label>
+                                        <select id="line-height" name="line-height" class="w-full px-4 py-2 border border-gray-300 rounded-lg form-input-focus">
+                                            <option value="tight">紧凑</option>
+                                            <option value="normal" selected>标准</option>
+                                            <option value="loose">宽松</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="margin" class="block text-sm font-medium text-text-primary mb-2">页边距</label>
+                                        <select id="margin" name="margin" class="w-full px-4 py-2 border border-gray-300 rounded-lg form-input-focus">
+                                            <option value="narrow">窄</option>
+                                            <option value="normal" selected>标准</option>
+                                            <option value="wide">宽</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="border-t border-border-light pt-6">
+                                    <h4 class="text-sm font-medium text-text-primary mb-4">主题模式</h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <label class="flex items-center space-x-3 p-4 border border-gray-300 rounded-lg cursor-pointer hover:border-primary">
+                                            <input type="radio" name="theme" value="light" checked class="text-primary focus:ring-primary">
+                                            <div class="flex items-center space-x-2">
+                                                <i class="fas fa-sun text-yellow-500"></i>
+                                                <span class="text-text-primary">明亮模式</span>
+                                            </div>
+                                        </label>
+                                        <label class="flex items-center space-x-3 p-4 border border-gray-300 rounded-lg cursor-pointer hover:border-primary">
+                                            <input type="radio" name="theme" value="dark" class="text-primary focus:ring-primary">
+                                            <div class="flex items-center space-x-2">
+                                                <i class="fas fa-moon text-gray-600"></i>
+                                                <span class="text-text-primary">夜间模式</span>
+                                            </div>
+                                        </label>
+                                        <label class="flex items-center space-x-3 p-4 border border-gray-300 rounded-lg cursor-pointer hover:border-primary">
+                                            <input type="radio" name="theme" value="eye-protection" class="text-primary focus:ring-primary">
+                                            <div class="flex items-center space-x-2">
+                                                <i class="fas fa-leaf text-green-500"></i>
+                                                <span class="text-text-primary">护眼模式</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="border-t border-border-light pt-6">
+                                    <h4 class="text-sm font-medium text-text-primary mb-4">阅读模式</h4>
+                                    <div class="space-y-3">
+                                        <label class="flex items-center space-x-3">
+                                            <input type="radio" name="reading-mode" value="page" checked class="text-primary focus:ring-primary">
+                                            <span class="text-text-primary">分页阅读</span>
+                                        </label>
+                                        <label class="flex items-center space-x-3">
+                                            <input type="radio" name="reading-mode" value="scroll" class="text-primary focus:ring-primary">
+                                            <span class="text-text-primary">滚动阅读</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex justify-end space-x-4 pt-4">
+                                    <button type="button" id="preferences-cancel" class="px-6 py-2 text-text-secondary border border-gray-300 rounded-lg hover:bg-gray-50">
+                                        取消
+                                    </button>
+                                    <button type="submit" id="preferences-save" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-blue-700">
+                                        保存
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- 数据同步设置 -->
+                    <div id="sync-section" class="setting-section">
+                        <div class="bg-white rounded-xl shadow-card p-6">
+                            <h3 class="text-lg font-semibold text-text-primary mb-6">数据同步</h3>
+                            <div class="space-y-6">
+                                <div class="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
+                                    <div class="flex items-center space-x-3">
+                                        <i class="fas fa-check-circle text-success text-xl"></i>
+                                        <div>
+                                            <h4 class="font-medium text-text-primary">同步状态</h4>
+                                            <p class="text-sm text-text-secondary">数据已同步到云端</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-sm text-text-secondary">最后同步</p>
+                                        <p class="text-sm font-medium text-text-primary">2024-01-15 14:30</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div class="text-center p-4 bg-gray-50 rounded-lg">
+                                        <div class="text-2xl font-bold text-primary mb-1">12</div>
+                                        <div class="text-sm text-text-secondary">书架小说</div>
+                                    </div>
+                                    <div class="text-center p-4 bg-gray-50 rounded-lg">
+                                        <div class="text-2xl font-bold text-tertiary mb-1">28</div>
+                                        <div class="text-sm text-text-secondary">阅读笔记</div>
+                                    </div>
+                                    <div class="text-center p-4 bg-gray-50 rounded-lg">
+                                        <div class="text-2xl font-bold text-info mb-1">15</div>
+                                        <div class="text-sm text-text-secondary">收藏内容</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="border-t border-border-light pt-6">
+                                    <h4 class="text-sm font-medium text-text-primary mb-4">同步选项</h4>
+                                    <div class="space-y-3">
+                                        <label class="flex items-center justify-between">
+                                            <span class="text-text-primary">自动同步</span>
+                                            <input type="checkbox" id="auto-sync" checked class="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary">
+                                        </label>
+                                        <label class="flex items-center justify-between">
+                                            <span class="text-text-primary">同步阅读进度</span>
+                                            <input type="checkbox" id="sync-progress" checked class="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary">
+                                        </label>
+                                        <label class="flex items-center justify-between">
+                                            <span class="text-text-primary">同步笔记和收藏</span>
+                                            <input type="checkbox" id="sync-notes" checked class="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary">
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex justify-end space-x-4 pt-4">
+                                    <button type="button" id="sync-now" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-blue-700">
+                                        <i class="fas fa-sync-alt mr-2"></i>立即同步
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 成功提示模态框 -->
+    <div id="success-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div class="flex items-center space-x-3 mb-4">
+                <i class="fas fa-check-circle text-success text-2xl"></i>
+                <h3 class="text-lg font-semibold text-text-primary">保存成功</h3>
+            </div>
+            <p id="success-message" class="text-text-secondary mb-4">设置已成功保存</p>
+            <div class="flex justify-end">
+                <button id="success-ok" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-700">
+                    确定
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 侧边栏切换功能
+            const sidebarToggle = document.querySelector('#sidebar-toggle');
+            const sidebar = document.querySelector('#sidebar');
+            const mainContent = document.querySelector('#main-content');
+            const sidebarTexts = document.querySelectorAll('.sidebar-text');
+            
+            let sidebarCollapsed = false;
+            
+            sidebarToggle.addEventListener('click', () => {
+                sidebarCollapsed = !sidebarCollapsed;
+                
+                if (sidebarCollapsed) {
+                    sidebar.classList.remove('sidebar-expanded');
+                    sidebar.classList.add('sidebar-collapsed');
+                    mainContent.classList.remove('main-content-expanded');
+                    mainContent.classList.add('main-content-collapsed');
+                    sidebarTexts.forEach(text => text.style.display = 'none');
+                } else {
+                    sidebar.classList.remove('sidebar-collapsed');
+                    sidebar.classList.add('sidebar-expanded');
+                    mainContent.classList.remove('main-content-collapsed');
+                    mainContent.classList.add('main-content-expanded');
+                    sidebarTexts.forEach(text => text.style.display = 'block');
+                }
+            });
+
+            // 二级菜单切换功能
+            const submenuItems = document.querySelectorAll('.submenu-item');
+            const settingSections = document.querySelectorAll('.setting-section');
+            
+            submenuItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    // 移除所有active状态
+                    submenuItems.forEach(submenu => {
+                        submenu.classList.remove('submenu-item-active');
+                        submenu.classList.add('text-text-secondary');
+                    });
+                    
+                    settingSections.forEach(section => {
+                        section.classList.remove('active');
+                    });
+                    
+                    // 添加当前active状态
+                    this.classList.add('submenu-item-active');
+                    this.classList.remove('text-text-secondary');
+                    
+                    // 显示对应内容
+                    const targetSection = this.id.replace('submenu-', '') + '-section';
+                    document.querySelector('#' + targetSection).classList.add('active');
+                });
+            });
+
+            // 头像上传功能
+            const avatarUpload = document.querySelector('#avatar-upload');
+            const avatarFile = document.querySelector('#avatar-file');
+            const avatarPreview = document.querySelector('#avatar-preview');
+            
+            avatarUpload.addEventListener('click', function() {
+                avatarFile.click();
+            });
+            
+            avatarFile.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        avatarPreview.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // 表单提交功能
+            function showSuccessModal(message) {
+                document.querySelector('#success-message').textContent = message;
+                document.querySelector('#success-modal').classList.remove('hidden');
+            }
+            
+            function hideSuccessModal() {
+                document.querySelector('#success-modal').classList.add('hidden');
+            }
+            
+            // 基本资料表单
+            document.querySelector('#profile-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                showSuccessModal('基本资料已成功保存');
+            });
+            
+            // 账号安全表单
+            document.querySelector('#security-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                showSuccessModal('账号安全设置已成功保存');
+            });
+            
+            // 阅读偏好表单
+            document.querySelector('#preferences-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                showSuccessModal('阅读偏好已成功保存');
+            });
+            
+            // 立即同步按钮
+            document.querySelector('#sync-now').addEventListener('click', function() {
+                showSuccessModal('数据同步完成');
+                // 更新同步时间
+                const now = new Date();
+                const timeString = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+                document.querySelector('#sync-section .text-right p:last-child').textContent = timeString;
+            });
+            
+            // 成功模态框确定按钮
+            document.querySelector('#success-ok').addEventListener('click', hideSuccessModal);
+            
+            // 取消按钮功能
+            document.querySelector('#profile-cancel').addEventListener('click', function() {
+                document.querySelector('#profile-form').reset();
+                avatarPreview.src = 'https://s.coze.cn/image/KIhDxQlQgfU/';
+            });
+            
+            document.querySelector('#security-cancel').addEventListener('click', function() {
+                document.querySelector('#security-form').reset();
+            });
+            
+            document.querySelector('#preferences-cancel').addEventListener('click', function() {
+                document.querySelector('#preferences-form').reset();
+            });
+
+            // 搜索功能
+            document.querySelector('#global-search').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const keyword = e.target.value.trim();
+                    if (keyword) {
+                        window.location.href = `P-SEARCH_RESULT.html?q=${encodeURIComponent(keyword)}`;
+                    }
+                }
+            });
+
+            // 导航功能
+            document.querySelector('#nav-home').addEventListener('click', function() {
+                window.location.href = 'P-HOME.html';
+            });
+            
+            document.querySelector('#nav-shelf').addEventListener('click', function() {
+                window.location.href = 'P-SHELF.html';
+            });
+            
+            document.querySelector('#nav-recommend').addEventListener('click', function() {
+                window.location.href = 'P-RECOMMEND.html';
+            });
+            
+            document.querySelector('#nav-help').addEventListener('click', function() {
+                window.location.href = 'P-HELP.html';
+            });
+
+            // 响应式处理
+            function handleResize() {
+                if (window.innerWidth < 1024) {
+                    sidebar.style.transform = sidebarCollapsed ? 'translateX(0)' : 'translateX(0)';
+                } else {
+                    sidebar.style.transform = 'translateX(0)';
+                }
+            }
+            
+            window.addEventListener('resize', handleResize);
+            handleResize();
+        });
+    </script>
+
+    <!-- 版权信息 -->
+    <footer class="bg-white border-t border-border-light py-6">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col items-center space-y-4">
+                <div class="flex items-center space-x-3">
+                    <img src="logo.png" alt="小说智阅坊" class="w-8 h-8">
+                    <span class="text-sm text-text-secondary">上海大学 25121385 于承樟</span>
+                </div>
+                <p class="text-xs text-text-secondary">© 2025 小说智阅坊 - 智能阅读平台</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
