@@ -1,22 +1,115 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小说智阅坊 - 首页跳转</title>
-    <!-- 立即跳转到主页面 -->
-    <meta http-equiv="refresh" content="0; url=P-HOME.html">
-    <!-- 兼容性跳转，确保所有浏览器都能正常工作 -->
-    <script>
-        // 如果meta刷新失效，使用JavaScript跳转
-        window.location.href = 'P-HOME.html';
-    </script>
+    <title>选择跳转目标</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #f0f2f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .title {
+            color: #1a1a1a;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            text-align: center; /* 标题居中 */
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .option {
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            transition: border-color 0.2s;
+            text-align: center; /* 选项内容居中 */
+        }
+
+        .option:hover {
+            border-color: #4285f4;
+        }
+
+        .option-title {
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .link {
+            display: inline-block;
+            color: #4285f4;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 20px;
+            border: 1px solid #4285f4;
+            border-radius: 4px;
+            transition: all 0.2s;
+            margin-bottom: 8px; /* 增加按钮与说明文字间距 */
+        }
+
+        .link:hover {
+            background: #4285f4;
+            color: white;
+        }
+
+        .note {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        footer {
+            margin-top: 20px;
+            color: #888;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-    <!-- 如果JavaScript被禁用，显示跳转链接 -->
-    <div style="text-align: center; margin-top: 50px; font-family: Arial, sans-serif;">
-        <h2>正在跳转到小说智阅坊...</h2>
-        <p>如果页面没有自动跳转，请 <a href="P-HOME.html">点击这里</a></p>
+    <div class="container">
+        <div class="title">您可以跳转到：</div>
+        
+        <div class="options">
+            <div class="option">
+                <div class="option-title">A. github里的网站</div>
+                <a href="https://yale-shnu.github.io/novel/" class="link">点击跳转</a>
+                <div class="note">（生成四格漫画功能受限）</div>
+            </div>
+
+            <div class="option">
+                <div class="option-title">B. 借助ngrok的本地服务器版</div>
+                <a href="https://59931fb0c5e2.ngrok-free.app" class="link">点击跳转</a>
+                <div class="note">（功能完整，但有时服务器可能处于非启动状态）</div>
+            </div>
+        </div>
     </div>
+
+    <footer>如有问题，请联系管理员</footer>
 </body>
 </html>
